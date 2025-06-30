@@ -29,6 +29,7 @@ public class PacketUtil {
                 WrapperPlayServerEntityAnimation.EntityAnimationType.SWING_MAIN_ARM);
         PacketEvents.getAPI().getPlayerManager().sendPacket(player, packet);
     }
+
     public static void spawnItemDisplay(List<Player> player,
                                         org.bukkit.Location location,
                                         org.bukkit.inventory.ItemStack displayItem,
@@ -49,6 +50,7 @@ public class PacketUtil {
         }
         updateItemDisplay(player, displayItem, entityId, scale, rotation);
     }
+
     public static void updateItemDisplay(List<Player> player,
                                          org.bukkit.inventory.ItemStack displayItem,
                                          int entityId,

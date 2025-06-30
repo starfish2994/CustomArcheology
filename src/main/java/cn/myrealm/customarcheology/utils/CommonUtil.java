@@ -32,9 +32,11 @@ import java.util.regex.Pattern;
 public class CommonUtil {
     private CommonUtil() {
     }
+
     public static boolean checkPluginLoad(String pluginName){
         return CustomArcheology.plugin.getServer().getPluginManager().isPluginEnabled(pluginName);
     }
+
     public static List<Player> getNearbyPlayers(Location location) {
         int visibleDistance = Config.VISIBLE_DISTANCE.asInt();
         Collection<Entity> entities = Objects.requireNonNull(location.getWorld()).getNearbyEntities(location, visibleDistance, visibleDistance, visibleDistance);
@@ -46,6 +48,7 @@ public class CommonUtil {
         }
         return players;
     }
+
     public static boolean checkClass(String className, String methodName) {
         try {
             Class<?> targetClass = Class.forName(className);
@@ -62,6 +65,7 @@ public class CommonUtil {
             return false;
         }
     }
+
     public static boolean getClass(String className) {
         try {
             Class.forName(className);
@@ -71,6 +75,7 @@ public class CommonUtil {
             return false;
         }
     }
+
     private static final Pattern RANGE_PATTERN = Pattern.compile("(-?\\d+)(?:\\s*~\\s*(-?\\d+))?");
 
     public static Point parseRange(String input) {

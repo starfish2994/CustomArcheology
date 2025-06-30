@@ -63,6 +63,9 @@ public class HookManager extends BaseManager {
         if (CommonUtil.checkPluginLoad("Nexo")) {
             registerNewItemHook("Nexo", new ItemNexoHook());
         }
+        if (CommonUtil.checkPluginLoad("CraftEngine")) {
+            registerNewItemHook("CraftEngine", new ItemCraftEngineHook());
+        }
 
         protectionHooks = new HashMap<>();
         if (CommonUtil.checkPluginLoad("WorldGuard")) {

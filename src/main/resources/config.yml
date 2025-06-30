@@ -38,6 +38,7 @@ settings:
   # Recommend you set a block material here
   # For users use 1.x version, please type 'BLUE_DYE' here
   block-material: STONE
+  disappear-after-break: false
   start-custom-model-data:
     block: 10000
     tool: 10000

@@ -70,6 +70,7 @@ public class ChunkManager extends BaseManager {
             dataChunk.saveChunk();
         }
     }
+
     public void removeBlock(Location location) {
         Chunk chunk = location.getChunk();
         if (chunkUnloaded(chunk)) {
@@ -77,6 +78,7 @@ public class ChunkManager extends BaseManager {
         }
         loadedChunks.get(chunk).removeBlock(location);
     }
+
     public void registerNewBlock(Chunk chunk, ArcheologyBlock block, Location location) {
         if (chunkUnloaded(chunk)) {
             loadChunk(chunk);

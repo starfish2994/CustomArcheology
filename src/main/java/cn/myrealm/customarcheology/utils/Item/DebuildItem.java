@@ -163,27 +163,27 @@ public class DebuildItem {
         // Fire Resistant
         if (CommonUtil.getMinorVersion(20, 5)) {
             if (meta.isFireResistant()) {
-                section.set("fire-resistant", "true");
+                section.set("fire-resistant", true);
             }
         }
 
         // Hide Tooltip
         if (CommonUtil.getMinorVersion(20, 5)) {
             if (meta.isHideTooltip()) {
-                section.set("hide-tool-tip", "true");
+                section.set("hide-tool-tip", true);
             }
         }
 
         // Glow
         if (CommonUtil.getMinorVersion(20, 5)) {
             if (meta.hasEnchantmentGlintOverride()) {
-                section.set("glow", "true");
+                section.set("glow", true);
             }
         }
 
         // Unbreakable
         if (meta.isUnbreakable()) {
-            section.set("unbreakable", "true");
+            section.set("unbreakable", true);
         }
 
         // Rarity
@@ -314,7 +314,7 @@ public class DebuildItem {
         }
 
         // Axolotl Bucket
-        if (CommonUtil.getMajorVersion(17)) {
+        if (CommonUtil.getMinorVersion(17, 1)) {
             if (meta instanceof AxolotlBucketMeta bucket) {
                 if (bucket.hasVariant()) {
                     section.set("color", bucket.getVariant().toString());

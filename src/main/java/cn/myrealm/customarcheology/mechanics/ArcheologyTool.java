@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * @author rzt1020
  */
 public class ArcheologyTool {
-    private final static String DISPLAY_NAME = "display_name",
+    private final static String DISPLAY_NAME = "display-name",
                                 LORE = "lore",
                                 TEXTURE = "texture",
                                 RECIPE_ = "recipe_";

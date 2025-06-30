@@ -6,7 +6,7 @@
 
     <groupId>cn.myrealm</groupId>
     <artifactId>CustomArcheology</artifactId>
-    <version>2.1.0</version>
+    <version>2.1.4</version>
     <packaging>jar</packaging>
 
     <name>CustomArcheology</name>
@@ -125,6 +125,10 @@
             <id>codemc-repo</id>
             <url>https://repo.codemc.io/repository/maven-public/</url>
             <layout>default</layout>
+        </repository>
+        <repository>
+            <id>momirealms repo</id>
+            <url>https://repo.momirealms.net/releases/</url>
         </repository>
     </repositories>
 
@@ -384,6 +388,18 @@
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api-plugin</artifactId>
             <version>2.12.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.momirealms</groupId>
+            <artifactId>craft-engine-core</artifactId>
+            <version>0.0.34</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.momirealms</groupId>
+            <artifactId>craft-engine-bukkit</artifactId>
+            <version>0.0.34</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

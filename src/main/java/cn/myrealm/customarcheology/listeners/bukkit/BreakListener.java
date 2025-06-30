@@ -1,6 +1,7 @@
 package cn.myrealm.customarcheology.listeners.bukkit;
 
 
+import cn.myrealm.customarcheology.enums.Config;
 import cn.myrealm.customarcheology.listeners.BaseListener;
 import cn.myrealm.customarcheology.managers.managers.ChunkManager;
 import cn.myrealm.customarcheology.mechanics.cores.ArcheologyBlock;
@@ -74,8 +75,10 @@ public class BreakListener extends BaseListener {
         ChunkManager chunkManager = ChunkManager.getInstance();
         if (chunkManager.isArcheologyBlock(loc)) {
             event.getPlayer().playSound(event.getPlayer(), chunkManager.getArcheologyBlock(loc).getBrushSound(), 1, 1);
-            loc.getBlock().setType(Material.AIR);
             chunkManager.removeBlock(loc);
+            if (Config.DISAPPEAR_AFTER_BREAK.asBoolean()) {
+                loc.getBlock().setType(Material.AIR);
+            }
         }
     }
 

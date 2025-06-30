@@ -84,12 +84,14 @@ public class PersistentDataChunk {
         blockNameList.toArray(array);
         chunk.getPersistentDataContainer().set(NamespacedKeys.ARCHEOLOGY_ARRAY.getNamespacedKey(), STRING_ARRAY_TYPE, array);
     }
+
     private void saveBlockLocations() {
         for (Location location : loadedLocationBlocks.keySet()) {
             FakeTileBlock block = loadedLocationBlocks.get(location);
             chunk.getPersistentDataContainer().set(NamespacedKeys.ARCHEOLOGY_BLOCK_LOC.getNamespacedKey(block.getBlockName()), LOCATION_TYPE, location);
         }
     }
+
     public void removeBlock(Location location) {
         location = location.getBlock().getLocation();
         if (!loadedLocationBlocks.containsKey(location)) {

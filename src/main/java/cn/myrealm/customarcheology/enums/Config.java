@@ -33,6 +33,7 @@ public enum Config {
     BLOCK_SCALE("settings.block-scale", 0.25),
     BLOCK_SAVE("settings.block-save", "UUID"),
     BLOCK_MATERIAL("settings.block-material", "STONE"),
+    DISAPPEAR_AFTER_BREAK("settings.disappear-after-break", false),
     HOOK_BETTERSTRUCTURES("settings.hook.betterstructures", true),
     // auto copy resource pack
     AUTO_COPY_RESOURCEPACK_ENABLED("auto-copy-resourcepack.enabled", true),

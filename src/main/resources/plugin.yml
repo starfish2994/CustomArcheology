@@ -26,6 +26,7 @@ softdepend:
   - EcoArmor
   - ExecutableItems
   - NBTAPI
+  - CraftEngine
 
 main: cn.myrealm.customarcheology.CustomArcheology
 api-version: '1.20'
