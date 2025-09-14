@@ -20,17 +20,13 @@ jobs:
           distribution: 'temurin'  # 使用 Eclipse Temurin JDK
           cache: gradle  # 缓存 Gradle 依赖，加速构建
 
-      # 步骤3：给 Gradle 脚本添加执行权限
-      - name: Make Gradle wrapper executable
-        run: chmod +x ./gradlew
-
       # 步骤附加：git参数设置
       - name: Git Config Set
         run: git config --global user.name "starfish2994"
 
       # 步骤4：执行 Gradle 构建任务（使用 shadowJar 打包）
-      - name: Build with Gradle
-        run: ./gradlew clean build  # 对应代码中 loader 模块的 shadowJar 任务
+      - name: Build with Mvn
+        run: mvn -B package # 对应代码中 loader 模块的 shadowJar 任务
 
       # 步骤5：上传构建产物（插件 JAR）
       - name: Upload plugin JAR
