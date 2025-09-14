@@ -18,7 +18,6 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'  # 使用 Eclipse Temurin JDK
-          cache: gradle  # 缓存 Gradle 依赖，加速构建
 
       # 步骤附加：git参数设置
       - name: Git Config Set
