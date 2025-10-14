@@ -14,8 +14,8 @@ public abstract class AbstractItemHook {
     public abstract ItemStack getHookItemByID(String itemID);
 
     public ItemStack returnNullItem(String itemID) {
-        Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §cError: Can not get "
-                + pluginName + " item: " + itemID + "!");
+        Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §cError: Can not get " + pluginName + " item: " + itemID + ", " +
+        "if you firmly believe that the item ID is correct, it is possible that your formatting is incorrect.");
         return null;
     }
 

@@ -98,6 +98,9 @@ public class HookManager extends BaseManager {
         if (CommonUtil.checkPluginLoad("Dominion")) {
             registerNewProtectionHook("Dominion", new ProtectionDominionHook());
         }
+        if (CommonUtil.checkPluginLoad("SuperiorSkyblock2")) {
+            registerNewProtectionHook("SuperiorSkyblock2", new ProtectionSuperiorSkyblock2Hook());
+        }
     }
 
     public void registerNewItemHook(String pluginName,

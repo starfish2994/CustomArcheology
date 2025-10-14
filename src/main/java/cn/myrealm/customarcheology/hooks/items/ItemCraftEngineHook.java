@@ -13,6 +13,9 @@ public class ItemCraftEngineHook extends AbstractItemHook {
 
     @Override
     public ItemStack getHookItemByID(String hookItemID) {
+        if (hookItemID.split(";;").length != 2) {
+            return returnNullItem(hookItemID);
+        }
         CustomItem<ItemStack> customItem = CraftEngineItems.byId(new Key(hookItemID.split(";;")[0], hookItemID.split(";;")[1]));
         if (customItem == null) {
             return null;
