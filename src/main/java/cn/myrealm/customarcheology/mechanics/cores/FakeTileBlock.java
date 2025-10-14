@@ -187,19 +187,21 @@ public class FakeTileBlock {
         if (Objects.isNull(reward)) {
             reward = block.roll(tool);
         }
-        Vector3f scale;
-        if (reward.getType().isBlock()) {
-            float size = (float) Config.BLOCK_SCALE.asDouble();
-            scale = new Vector3f(size, size, size);
-        } else {
-            float size = (float) Config.ITEM_SCALE.asDouble();
-            scale = new Vector3f(size, size, size);
-        }
-
         Quaternion4f rotation = null;
         if (blockFace.equals(BlockFace.NORTH) || blockFace.equals(BlockFace.SOUTH)) {
             rotation = new Quaternion4f(0, -1, 0, -1);
         }
+        float size;
+        if (reward.getType().isBlock()) {
+            size = (float) Config.BLOCK_SCALE.asDouble();
+        } else {
+            size = (float) Config.ITEM_SCALE.asDouble();
+        }
+        if (rotation != null && CommonUtil.getMinorVersion(21, 5) && Config.SCALE_ISSUE_FIX.asBoolean()) {
+            size = size / 2;
+        }
+        Vector3f scale = new Vector3f(size, size, size);
+
         PacketUtil.spawnItemDisplay(players, location, reward, entityId + 1, scale, rotation);
     }
 

@@ -31,6 +31,7 @@ public enum Config {
     VISIBLE_DISTANCE("settings.visible-distance", 8),
     ITEM_SCALE("settings.item-scale", 0.5),
     BLOCK_SCALE("settings.block-scale", 0.25),
+    SCALE_ISSUE_FIX("settings.scale-issue-fix", true),
     BLOCK_SAVE("settings.block-save", "UUID"),
     BLOCK_MATERIAL("settings.block-material", "STONE"),
     DISAPPEAR_AFTER_BREAK("settings.disappear-after-break", false),

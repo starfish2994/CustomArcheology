@@ -1,6 +1,7 @@
 package cn.myrealm.customarcheology.utils;
 
 
+import cn.myrealm.customarcheology.enums.Config;
 import cn.myrealm.customarcheology.enums.Permissions;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
@@ -69,7 +70,7 @@ public class PacketUtil {
             if (Objects.nonNull(scale)) {
                 data.add(new EntityData(12, EntityDataTypes.VECTOR3F, scale));
             }
-            if (Objects.nonNull(rotation) && !CommonUtil.getMinorVersion(21, 5)) {
+            if (Objects.nonNull(rotation)) {
                 data.add(new EntityData(13, EntityDataTypes.QUATERNION, rotation));
             }
             data.add(new EntityData(23, EntityDataTypes.ITEMSTACK, SpigotConversionUtil.fromBukkitItemStack(displayItem)));
