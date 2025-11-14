@@ -332,11 +332,14 @@ public class DebuildItem {
         }
 
         // Skull
-        if (meta instanceof SkullMeta skullMeta) {
-            if (skullMeta.hasOwner() && skullMeta.getOwningPlayer().getName() != null) {
-                section.set("skull", skullMeta.getOwningPlayer().getName());
-            } else {
-                try {
+        if (meta instanceof SkullMeta) {
+            SkullMeta skullMeta = (SkullMeta) meta;
+            try {
+                if (skullMeta.hasOwner() && skullMeta.getOwningPlayer() != null) {
+                    if (skullMeta.getOwningPlayer().getName() != null) {
+                        section.set("skull", skullMeta.getOwningPlayer().getName());
+                    }
+                } else {
                     Field field = skullMeta.getClass().getDeclaredField("profile");
                     field.setAccessible(true);
                     if (CustomArcheology.newSkullMethod) {
@@ -361,10 +364,8 @@ public class DebuildItem {
                             section.set("skull", field3.get(property));
                         }
                     }
-                } catch (Exception exception) {
-                    exception.printStackTrace();
-                    Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[ManyouItems] §cError: Can not parse skull texture in a item!");
                 }
+            } catch (Throwable throwable) {
             }
         }
 

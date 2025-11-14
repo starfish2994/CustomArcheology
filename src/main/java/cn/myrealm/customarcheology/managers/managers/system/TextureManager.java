@@ -287,7 +287,7 @@ public class TextureManager extends BaseManager {
                     Config.AUTO_COPY_RESOURCEPACK_PLUGIN.asString() + Config.AUTO_COPY_RESOURCEPACK_PATH.asString() + "!");
             if (!Bukkit.getPluginManager().isPluginEnabled(Config.AUTO_COPY_RESOURCEPACK_PLUGIN.asString())) {
                 Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §cError: " + Config.AUTO_COPY_RESOURCEPACK_PLUGIN.asString() +
-                        " is not installed in your server! Maybe its have errors when loading or you just typo!");
+                        " not installed!");
                 return;
             }
             mkdirs(Bukkit.getPluginManager().getPlugin(Config.AUTO_COPY_RESOURCEPACK_PLUGIN.asString()).getDataFolder().getPath()
@@ -295,12 +295,10 @@ public class TextureManager extends BaseManager {
             copyFolder(CustomArcheology.plugin.getDataFolder().getPath() + "/pack/assets/",
                     Bukkit.getPluginManager().getPlugin(Config.AUTO_COPY_RESOURCEPACK_PLUGIN.asString()).getDataFolder().getPath()
                             + Config.AUTO_COPY_RESOURCEPACK_PATH.asString());
-            Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §fCopy finished, don't forgot reload " +
-                    "your ItemsAdder or Oraxen or other resource pack plugin!");
+            Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §fCopy finished!");
         } catch (IOException e) {
             e.printStackTrace();
-            Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §cError: Can not copy resource pack to " +
-                    Config.AUTO_COPY_RESOURCEPACK_PLUGIN.asString() + Config.AUTO_COPY_RESOURCEPACK_PATH.asString() + "!");
+            Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §cError: Cannot copy resource pack!");
         }
     }
 
