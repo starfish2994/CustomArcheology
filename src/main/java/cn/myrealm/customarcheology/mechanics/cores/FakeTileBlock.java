@@ -37,6 +37,7 @@ public class FakeTileBlock {
     private final Set<Player> sentPlayers = new HashSet<>();
     private final Location location;
     private ItemStack reward;
+    private Long respawnAt;
     private boolean isPlaying = false,
                     isEffectInitialized = false;
     private final Stack<Integer> order = new Stack<>(), complete = new Stack<>();
@@ -47,6 +48,10 @@ public class FakeTileBlock {
     private ItemStack tool;
 
     public FakeTileBlock(String blockName, Location location, ItemStack reward) {
+        this(blockName, location, reward, null);
+    }
+
+    public FakeTileBlock(String blockName, Location location, ItemStack reward, Long respawnAt) {
         this.blockName = blockName;
         this.location = location;
         String[] nameParts = blockName.split("_");
@@ -63,6 +68,7 @@ public class FakeTileBlock {
             Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §fEntity ID: " + entityId);
         }
         this.reward = reward;
+        this.respawnAt = respawnAt;
     }
 
     public String getBlockName() {
@@ -70,9 +76,16 @@ public class FakeTileBlock {
     }
 
     public void placeBlock() {
+        finishRespawnCooldownIfNeeded();
+        if (isCoolingDown()) {
+            location.getBlock().setType(block.getFinishedState().getMaterial());
+            return;
+        }
         if (isPlaying) {
             return;
         }
+
+        location.getBlock().setType(Material.BARRIER);
 
         List<Player> players = CommonUtil.getNearbyPlayers(location);
         players.removeAll(sentPlayers);
@@ -82,23 +95,35 @@ public class FakeTileBlock {
             return;
         }
 
-        location.getBlock().setType(Material.BARRIER);
         PacketUtil.spawnItemDisplay(players, location, block.generateItemStack(1), entityId, null, null);
     }
 
     public void removeBlock() {
         List<Player> players = Objects.requireNonNull(location.getWorld()).getPlayers();
-
-        if (players.isEmpty()) {
-            return;
+        if (!players.isEmpty()) {
+            PacketUtil.removeEntity(players, entityId + 1);
+            PacketUtil.removeEntity(players, entityId);
         }
-
+        sentPlayers.clear();
         location.getBlock().setType(block.getType());
-        PacketUtil.removeEntity(players, entityId);
     }
 
     public boolean isValid() {
         return Objects.nonNull(block);
+    }
+
+    public boolean isActive() {
+        finishRespawnCooldownIfNeeded();
+        return !isCoolingDown();
+    }
+
+    public boolean isCoolingDown() {
+        return Objects.nonNull(respawnAt) && respawnAt > System.currentTimeMillis();
+    }
+
+    public Long getRespawnAt() {
+        finishRespawnCooldownIfNeeded();
+        return respawnAt;
     }
 
     public ArcheologyBlock getArcheologyBlock() {
@@ -106,6 +131,9 @@ public class FakeTileBlock {
     }
 
     public void play(BlockFace blockFace, ItemStack tool) {
+        if (!isActive()) {
+            return;
+        }
         if (Config.DEBUG.asBoolean()) {
             Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §fTrying start play effect.");
         }
@@ -233,9 +261,14 @@ public class FakeTileBlock {
             PlayerManager playerManager = PlayerManager.getInstance();
             playerManager.cancelBlock(this);
             ChunkManager chunkManager = ChunkManager.getInstance();
-            chunkManager.removeBlock(this.location);
+            if (block.shouldRespawn()) {
+                chunkManager.startRespawnCooldown(this.location);
+            } else {
+                chunkManager.removeBlock(this.location);
+            }
             this.location.getBlock().setType(state.getMaterial());
             Objects.requireNonNull(this.location.getWorld()).spawnParticle(CustomArcheology.getCorrectParticle(), this.location.clone().add(0.5,0.5,0.5), 100, 0.3, 0.3, 0.3, block.getType().createBlockData());
+            return;
         } else {
             PacketUtil.teleportEntity(players, entityId + 1, location);
             PacketUtil.updateItemDisplay(players, block.generateItemStack(1, state), entityId, null, null);
@@ -305,6 +338,59 @@ public class FakeTileBlock {
 
     public ItemStack getReward() {
         return reward;
+    }
+
+    public void prepareForChunkUnload() {
+        List<Player> players = Objects.requireNonNull(location.getWorld()).getPlayers();
+        if (!players.isEmpty()) {
+            PacketUtil.removeEntity(players, entityId + 1);
+            PacketUtil.removeEntity(players, entityId);
+        }
+        sentPlayers.clear();
+        if (isCoolingDown()) {
+            location.getBlock().setType(block.getFinishedState().getMaterial());
+        } else {
+            location.getBlock().setType(block.getType());
+        }
+    }
+
+    public void startRespawnCooldown() {
+        if (!block.shouldRespawn()) {
+            return;
+        }
+        if (Objects.nonNull(particleTask) && !particleTask.isCancelled()) {
+            particleTask.cancel();
+        }
+        List<Player> players = Objects.requireNonNull(location.getWorld()).getPlayers();
+        if (!players.isEmpty()) {
+            PacketUtil.removeEntity(players, entityId + 1);
+            PacketUtil.removeEntity(players, entityId);
+        }
+        sentPlayers.clear();
+        resetProgress();
+        reward = null;
+        respawnAt = System.currentTimeMillis() + block.getRespawnDelayMillis();
+        location.getBlock().setType(block.getFinishedState().getMaterial());
+    }
+
+    private void resetProgress() {
+        isPlaying = false;
+        isEffectInitialized = false;
+        order.clear();
+        complete.clear();
+        taskMap.clear();
+        nextTask = null;
+        tool = null;
+    }
+
+    private void finishRespawnCooldownIfNeeded() {
+        if (Objects.nonNull(respawnAt) && respawnAt <= System.currentTimeMillis()) {
+            respawnAt = null;
+            reward = null;
+            resetProgress();
+            sentPlayers.clear();
+            location.getBlock().setType(Material.BARRIER);
+        }
     }
 }
 

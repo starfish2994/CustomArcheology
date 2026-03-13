@@ -3,6 +3,7 @@ general:
   replace-block: end_stone
   biomes: all
   distribution: 0 ~ 127
+  respawn-delay: -1
   gaussian:
     mean: 32.0
     standard-deviation: 64.0

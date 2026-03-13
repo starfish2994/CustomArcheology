@@ -79,6 +79,14 @@ public class ChunkManager extends BaseManager {
         loadedChunks.get(chunk).removeBlock(location);
     }
 
+    public void startRespawnCooldown(Location location) {
+        Chunk chunk = location.getChunk();
+        if (chunkUnloaded(chunk)) {
+            loadChunk(chunk);
+        }
+        loadedChunks.get(chunk).startRespawnCooldown(location);
+    }
+
     public void registerNewBlock(Chunk chunk, ArcheologyBlock block, Location location) {
         if (chunkUnloaded(chunk)) {
             loadChunk(chunk);
@@ -121,6 +129,16 @@ public class ChunkManager extends BaseManager {
     public ArcheologyBlock getArcheologyBlock(Location location) {
         PersistentDataChunk dataChunk = getPersistentDataChunk(location);
         return dataChunk.getArcheologyBlock(location);
+    }
+
+    public boolean isManagedBlock(Location location) {
+        PersistentDataChunk dataChunk = getPersistentDataChunk(location);
+        return dataChunk.isManagedBlock(location);
+    }
+
+    public boolean isRespawningBlock(Location location) {
+        PersistentDataChunk dataChunk = getPersistentDataChunk(location);
+        return dataChunk.isRespawningBlock(location);
     }
 
     public PersistentDataChunk getPersistentDataChunk(Location location) {

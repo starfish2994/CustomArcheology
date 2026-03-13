@@ -3,6 +3,7 @@ general:
   replace-block: sculk
   biomes: all
   distribution: -64 ~ 0
+  respawn-delay: -1
   structure:
     type: ancient_city
   max-per-chunk: 16

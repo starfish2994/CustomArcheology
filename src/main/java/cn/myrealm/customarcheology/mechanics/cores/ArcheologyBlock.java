@@ -41,6 +41,7 @@ public class ArcheologyBlock {
     private List<Biome> biomes;
     private Point distribution;
     private int maxPerChunk;
+    private int respawnDelay;
 
     public ArcheologyBlock(YamlConfiguration config, String name) {
         this.config = config;
@@ -128,6 +129,7 @@ public class ArcheologyBlock {
         }
         distribution = CommonUtil.parseRange(Keys.DISTRIBUTION.asString(config));
         maxPerChunk =  Keys.MAX_PER_CHUNK.asInt(config);
+        respawnDelay = Keys.RESPAWN_DELAY.asInt(config);
     }
 
     public List<Biome> getBiomes() {
@@ -138,6 +140,12 @@ public class ArcheologyBlock {
     }
     public int getMaxPerChunk() {
         return maxPerChunk;
+    }
+    public boolean shouldRespawn() {
+        return respawnDelay > 0;
+    }
+    public long getRespawnDelayMillis() {
+        return respawnDelay * 1000L;
     }
 
     public String getName() {
@@ -242,6 +250,7 @@ enum Keys {
     GENERATE_BIOMES("general.biomes", "all"),
     DISTRIBUTION("general.distribution", null),
     MAX_PER_CHUNK("general.max_per_chunk", 0),
+    RESPAWN_DELAY("general.respawn_delay", 0),
     GAUSSIAN("general.gaussian", null),
     MEAN("general.gaussian.mean", 0D),
     STANDARD_DEVIATION("general.gaussian.standard_deviation", 1D),
