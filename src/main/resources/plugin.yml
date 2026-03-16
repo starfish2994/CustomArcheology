@@ -51,6 +51,7 @@ permissions:
       customarcheology.command.reload: true
       customarcheology.command.archify: true
       customarcheology.command.dearchify: true
+      customarcheology.command.removeblock: true
   customarcheology.command.help:
     default: op
   customarcheology.command.reload:
@@ -60,6 +61,8 @@ permissions:
   customarcheology.command.archify:
     default: op
   customarcheology.command.dearchify:
+    default: op
+  customarcheology.command.removeblock:
     default: op
   customarcheology.play.*:
     default: true

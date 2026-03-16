@@ -28,6 +28,9 @@ import static org.bukkit.Material.BARRIER;
  * @author rzt1020
  */
 public class BreakListener extends BaseListener {
+    private enum BreakAction {
+        RESPAWN_IF_AVAILABLE
+    }
 
     public BreakListener(JavaPlugin plugin) {
         super(plugin);
@@ -37,11 +40,22 @@ public class BreakListener extends BaseListener {
     public void onBreakBlock(BlockBreakEvent event) {
         Location loc = event.getBlock().getLocation();
         ChunkManager chunkManager = ChunkManager.getInstance();
+        boolean creative = event.getPlayer().getGameMode().equals(GameMode.CREATIVE);
         if (chunkManager.isRespawningBlock(loc)) {
-            event.setCancelled(true);
+            if (creative) {
+                chunkManager.unregisterBlock(loc);
+            } else {
+                event.setCancelled(true);
+            }
             return;
         }
-        if (handleBrokenArcheologyBlock(chunkManager, loc, Config.DISAPPEAR_AFTER_BREAK.asBoolean(), event.getPlayer().getGameMode().equals(GameMode.CREATIVE))) {
+        if (creative) {
+            if (chunkManager.isArcheologyBlock(loc)) {
+                chunkManager.unregisterBlock(loc);
+            }
+            return;
+        }
+        if (handleBrokenArcheologyBlock(chunkManager, loc, Config.DISAPPEAR_AFTER_BREAK.asBoolean(), BreakAction.RESPAWN_IF_AVAILABLE)) {
             event.setCancelled(true);
         }
     }
@@ -78,7 +92,7 @@ public class BreakListener extends BaseListener {
             event.setCancelled(true);
             return;
         }
-        if (handleBrokenArcheologyBlock(chunkManager, loc, false, true)) {
+        if (handleBrokenArcheologyBlock(chunkManager, loc, false, BreakAction.RESPAWN_IF_AVAILABLE)) {
             event.setCancelled(true);
         }
     }
@@ -107,14 +121,19 @@ public class BreakListener extends BaseListener {
         Location loc = Objects.requireNonNull(event.getClickedBlock()).getLocation();
         ChunkManager chunkManager = ChunkManager.getInstance();
         if (chunkManager.isRespawningBlock(loc)) {
-            event.setCancelled(true);
+            if (!event.getPlayer().getGameMode().equals(GameMode.CREATIVE)) {
+                event.setCancelled(true);
+            }
             return;
         }
         ArcheologyBlock block = chunkManager.getArcheologyBlock(loc);
         if (block != null) {
+            if (event.getPlayer().getGameMode().equals(GameMode.CREATIVE)) {
+                return;
+            }
             event.setCancelled(true);
             event.getPlayer().playSound(event.getPlayer(), block.getBrushSound(), 1, 1);
-            handleBrokenArcheologyBlock(chunkManager, loc, Config.DISAPPEAR_AFTER_BREAK.asBoolean(), true);
+            handleBrokenArcheologyBlock(chunkManager, loc, Config.DISAPPEAR_AFTER_BREAK.asBoolean(), BreakAction.RESPAWN_IF_AVAILABLE);
         }
     }
 
@@ -138,15 +157,15 @@ public class BreakListener extends BaseListener {
         if (chunkManager.isRespawningBlock(loc)) {
             return true;
         }
-        return handleBrokenArcheologyBlock(chunkManager, loc, false, true);
+        return handleBrokenArcheologyBlock(chunkManager, loc, false, BreakAction.RESPAWN_IF_AVAILABLE);
     }
 
-    private boolean handleBrokenArcheologyBlock(ChunkManager chunkManager, Location loc, boolean disappearAfterBreak, boolean respawn) {
+    private boolean handleBrokenArcheologyBlock(ChunkManager chunkManager, Location loc, boolean disappearAfterBreak, BreakAction action) {
         ArcheologyBlock block = chunkManager.getArcheologyBlock(loc);
         if (block == null) {
             return false;
         }
-        if (block.shouldRespawn() && respawn) {
+        if (action.equals(BreakAction.RESPAWN_IF_AVAILABLE) && block.shouldRespawn()) {
             chunkManager.startRespawnCooldown(loc);
             return true;
         }

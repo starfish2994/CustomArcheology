@@ -99,13 +99,28 @@ public class FakeTileBlock {
     }
 
     public void removeBlock() {
+        clearManagedState();
+        location.getBlock().setType(block.getType());
+    }
+
+    public void unregisterBlock() {
+        clearManagedState();
+    }
+
+    private void clearManagedState() {
+        if (Objects.nonNull(particleTask) && !particleTask.isCancelled()) {
+            particleTask.cancel();
+        }
+        PlayerManager.getInstance().cancelBlock(this);
+        resetProgress();
+        reward = null;
+        respawnAt = null;
         List<Player> players = Objects.requireNonNull(location.getWorld()).getPlayers();
         if (!players.isEmpty()) {
             PacketUtil.removeEntity(players, entityId + 1);
             PacketUtil.removeEntity(players, entityId);
         }
         sentPlayers.clear();
-        location.getBlock().setType(block.getType());
     }
 
     public boolean isValid() {
@@ -263,10 +278,11 @@ public class FakeTileBlock {
             ChunkManager chunkManager = ChunkManager.getInstance();
             if (block.shouldRespawn()) {
                 chunkManager.startRespawnCooldown(this.location);
+                this.location.getBlock().setType(state.getMaterial());
             } else {
-                chunkManager.removeBlock(this.location);
+                chunkManager.unregisterBlock(this.location);
+                this.location.getBlock().setType(state.getMaterial());
             }
-            this.location.getBlock().setType(state.getMaterial());
             Objects.requireNonNull(this.location.getWorld()).spawnParticle(CustomArcheology.getCorrectParticle(), this.location.clone().add(0.5,0.5,0.5), 100, 0.3, 0.3, 0.3, block.getType().createBlockData());
             return;
         } else {

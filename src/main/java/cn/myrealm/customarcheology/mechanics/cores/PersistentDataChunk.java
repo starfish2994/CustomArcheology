@@ -118,8 +118,30 @@ public class PersistentDataChunk {
         }
         String removedBlockData = loadedLocationBlocks.get(location).getBlockName();
         loadedLocationBlocks.get(location).removeBlock();
+        unregisterBlockData(location, removedBlockData);
+    }
+
+    public int removeAllBlocks() {
+        List<Location> locations = new ArrayList<>(loadedLocationBlocks.keySet());
+        for (Location location : locations) {
+            removeBlock(location);
+        }
+        return locations.size();
+    }
+
+    public void unregisterBlock(Location location) {
+        location = location.getBlock().getLocation();
+        if (!loadedLocationBlocks.containsKey(location)) {
+            return;
+        }
+        FakeTileBlock fakeTileBlock = loadedLocationBlocks.remove(location);
+        String removedBlockData = fakeTileBlock.getBlockName();
+        fakeTileBlock.unregisterBlock();
+        unregisterBlockData(location, removedBlockData);
+    }
+
+    private void unregisterBlockData(Location location, String removedBlockData) {
         blockNameList.remove(removedBlockData);
-        loadedLocationBlocks.remove(location);
         saveBlockNames();
         if (chunk.getPersistentDataContainer().has(NamespacedKeys.ARCHEOLOGY_BLOCK_LOC.getNamespacedKey(removedBlockData), LOCATION_TYPE)) {
             chunk.getPersistentDataContainer().remove(NamespacedKeys.ARCHEOLOGY_BLOCK_LOC.getNamespacedKey(removedBlockData));

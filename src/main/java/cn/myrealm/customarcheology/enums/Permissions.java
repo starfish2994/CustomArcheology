@@ -17,6 +17,7 @@ public enum Permissions {
     COMMAND_ARCHIFY(COMMAND + "archify"),
     COMMAND_DEARCHIFY(COMMAND + "dearchify"),
     COMMAND_PLACE(COMMAND + "place"),
+    COMMAND_REMOVEBLOCK(COMMAND + "removeblock"),
     // plays
     PLAY(ROOT + "play."),
     PLAY_ARCHEOLOGY(PLAY + "archeology"),
