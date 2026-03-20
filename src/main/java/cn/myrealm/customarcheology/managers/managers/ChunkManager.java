@@ -10,8 +10,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -164,19 +162,16 @@ public class ChunkManager extends BaseManager {
         loadedChunks.put(chunk, dataChunk);
     }
 
-
     public void unloadChunk(Chunk chunk) {
         if (chunkUnloaded(chunk)) {
             return;
         }
-        for (Entity entity : chunk.getEntities()) {
-            if (entity.getType().equals(EntityType.PLAYER)) {
-                return;
-            }
+        PersistentDataChunk dataChunk = loadedChunks.remove(chunk);
+        if (dataChunk != null) {
+            dataChunk.saveChunk();
         }
-        loadedChunks.get(chunk).saveChunk();
-        loadedChunks.remove(chunk);
     }
+
     public boolean chunkUnloaded(Chunk chunk) {
         return !loadedChunks.containsKey(chunk);
     }
