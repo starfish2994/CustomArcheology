@@ -14,6 +14,8 @@
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- 禁用仓库镜像，避免路由错误 -->
+        <maven.repo.local>${project.basedir}/.m2/repository</maven.repo.local>
     </properties>
 
     <build>
@@ -21,7 +23,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version> <!-- 升级到兼容Java17的版本 -->
+                <version>3.11.0</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -31,7 +33,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.1</version> <!-- 升级稳定版本 -->
+                <version>3.5.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -40,8 +42,26 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <!-- 解决system依赖打包问题 -->
                             <includeSystemScope>true</includeSystemScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- 跳过依赖检查（兜底方案） -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeScope>system</includeScope>
+                            <outputDirectory>${project.build.directory}/libs</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -56,22 +76,37 @@
     </build>
 
     <repositories>
-        <!-- 原有仓库保留，并补充缺失的关键仓库 -->
+        <!-- 只保留可访问的核心仓库，移除无法访问的indyuce -->
         <repository>
             <id>spigotmc-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+            <releases><enabled>false</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
         </repository>
         <repository>
             <id>paper-repo</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
         <repository>
-            <id>sonatype</id>
-            <url>https://oss.sonatype.org/content/groups/public/</url>
+            <id>placeholderapi</id>
+            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+            <!-- 优先从该仓库获取placeholderapi -->
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
-            <id>dmulloy2-repo</id>
-            <url>https://repo.dmulloy2.net/repository/public/</url>
+            <id>enginehub</id>
+            <url>https://maven.enginehub.org/repo/</url>
+        </repository>
+        <repository>
+            <id>codemc-releases</id>
+            <url>https://repo.codemc.io/repository/maven-releases/</url>
+        </repository>
+        <repository>
+            <id>codemc-snapshots</id>
+            <url>https://repo.codemc.io/repository/maven-snapshots/</url>
+            <releases><enabled>false</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
         </repository>
         <repository>
             <id>jitpack-repo</id>
@@ -82,71 +117,15 @@
             <url>https://mvn.lumine.io/repository/maven-public/</url>
         </repository>
         <repository>
-            <id>rosewood-repo</id>
-            <url>https://repo.rosewooddev.io/repository/public/</url>
-        </repository>
-        <repository>
-            <id>minecraft-repo</id>
-            <url>https://libraries.minecraft.net/</url>
-        </repository>
-        <repository>
-            <id>placeholderapi</id>
-            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
-        </repository>
-        <repository>
-            <id>auxilor</id>
-            <url>https://repo.auxilor.io/repository/maven-public/</url>
-        </repository>
-        <repository>
-            <id>phoenix</id>
-            <url>https://nexus.phoenixdevt.fr/repository/maven-public/</url>
-        </repository>
-        <repository>
-            <id>oss-sonatype</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
-        </repository>
-        <repository>
-            <id>enginehub</id> <!-- 替换原worldedit仓库，使用官方正确ID -->
-            <url>https://maven.enginehub.org/repo/</url>
-        </repository>
-        <repository>
-            <id>codemc-releases</id>
-            <url>https://repo.codemc.io/repository/maven-releases/</url>
-        </repository>
-        <repository>
-            <id>codemc-snapshots</id> <!-- 新增快照仓库 -->
-            <url>https://repo.codemc.io/repository/maven-snapshots/</url>
-        </repository>
-        <repository>
             <id>william278.net</id>
             <url>https://repo.william278.net/releases</url>
         </repository>
         <repository>
-            <id>glaremasters repo</id>
-            <url>https://repo.glaremasters.me/repository/towny/</url>
-        </repository>
-        <repository>
-            <id>codemc-repo</id>
-            <url>https://repo.codemc.io/repository/maven-public/</url>
-            <layout>default</layout>
-        </repository>
-        <repository>
-            <id>momirealms repo</id>
-            <url>https://repo.momirealms.net/releases/</url>
-        </repository>
-        <repository>
-            <id>bg-repo</id>
-            <url>https://repo.bg-software.com/repository/api/</url>
-        </repository>
-        <!-- 新增MMOItems官方仓库 -->
-        <repository>
-            <id>indyuce</id>
-            <url>https://repo.indyuce.com/repository/maven-public/</url>
-        </repository>
-        <!-- 新增BentoBox仓库 -->
-        <repository>
-            <id>bentobox</id>
-            <url>https://repo.bentobox.world/content/groups/public/</url>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <!-- 最后才使用中央仓库 -->
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
         </repository>
     </repositories>
 
@@ -159,11 +138,18 @@
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
+            <!-- 锁定placeholderapi版本，避免版本漂移 -->
+            <dependency>
+                <groupId>me.clip</groupId>
+                <artifactId>placeholderapi</artifactId>
+                <version>2.11.2</version>
+                <scope>provided</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-        <!-- 修复System依赖：文件名/版本不一致问题 -->
+        <!-- ========== System依赖（手动管理，最稳定） ========== -->
         <dependency>
             <groupId>cn.superiormc</groupId>
             <artifactId>ManyouItems</artifactId>
@@ -176,21 +162,21 @@
             <artifactId>MythicDungeon</artifactId>
             <version>1.4.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MythicDungeons-1.4.0.jar</systemPath> <!-- 保留现有文件名，避免重命名 -->
+            <systemPath>${project.basedir}/lib/MythicDungeons-1.4.0.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.willfp</groupId>
             <artifactId>EcoItems</artifactId>
             <version>5.10.4</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/lib/EcoItems-5.10.4.jar</systemPath> <!-- 建议重命名jar为无空格版本 -->
+            <systemPath>${project.basedir}/lib/EcoItems-5.10.4.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.willfp</groupId>
             <artifactId>EcoArmor</artifactId>
             <version>7.145.4</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/lib/EcoArmor-7.145.4.jar</systemPath> <!-- 建议重命名jar为无空格版本 -->
+            <systemPath>${project.basedir}/lib/EcoArmor-7.145.4.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.willfp</groupId>
@@ -202,7 +188,7 @@
         <dependency>
             <groupId>com.ssomar.score</groupId>
             <artifactId>SCore</artifactId>
-            <version>5.24.7.9</version> <!-- 修正版本号匹配文件 -->
+            <version>5.24.7.9</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/SCore-5.24.7.9.jar</systemPath>
         </dependency>
@@ -216,7 +202,7 @@
         <dependency>
             <groupId>com.nexomc</groupId>
             <artifactId>nexo</artifactId>
-            <version>0.5.0-dev</version> <!-- 修正版本号匹配文件 -->
+            <version>0.5.0-dev</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/nexo-0.5.0-dev.jar</systemPath>
         </dependency>
@@ -228,7 +214,30 @@
             <systemPath>${project.basedir}/lib/Residence5.1.6.2.jar</systemPath>
         </dependency>
 
-        <!-- Provided依赖：修复快照版本/仓库问题 -->
+        <!-- ========== 无法通过仓库获取的依赖，改为System类型 ========== -->
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+            <version>2.11.2</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/placeholderapi-2.11.2.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>net.Indyuce</groupId>
+            <artifactId>MMOItems</artifactId>
+            <version>6.6.1</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/MMOItems-6.6.1.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.magmaguy</groupId>
+            <artifactId>BetterStructures</artifactId>
+            <version>1.6.8-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/BetterStructures-1.6.8-SNAPSHOT.jar</systemPath>
+        </dependency>
+
+        <!-- ========== 可正常获取的Provided依赖 ========== -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
@@ -281,23 +290,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- 移除重复的Mythic-Dist依赖，保留高版本 -->
         <dependency>
             <groupId>io.lumine</groupId>
             <artifactId>Mythic-Dist</artifactId>
             <version>5.5.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>me.clip</groupId>
-            <artifactId>placeholderapi</artifactId>
-            <version>2.11.2</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.Indyuce</groupId>
-            <artifactId>MMOItems</artifactId>
-            <version>6.6.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -319,16 +315,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.magmaguy</groupId>
-            <artifactId>BetterStructures</artifactId>
-            <version>1.6.8-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- 替换WorldEdit快照版本为稳定版 -->
-        <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-bukkit</artifactId>
-            <version>7.1.0</version> <!-- 稳定版本，避免快照失效 -->
+            <version>7.1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -337,11 +326,10 @@
             <version>2.6.0</version>
             <scope>provided</scope>
         </dependency>
-        <!-- 替换WorldGuard快照版本为稳定版 -->
         <dependency>
             <groupId>com.sk89q.worldguard</groupId>
             <artifactId>worldguard-bukkit</artifactId>
-            <version>7.0.2</version> <!-- 稳定版本，避免快照失效 -->
+            <version>7.0.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -393,7 +381,7 @@
         <dependency>
             <groupId>world.bentobox</groupId>
             <artifactId>bentobox</artifactId>
-            <version>2.7.0</version> <!-- 替换快照为稳定版 -->
+            <version>2.7.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
