@@ -1,7 +1,6 @@
 package cn.myrealm.customarcheology.listeners.bukkit;
 
 
-import cn.myrealm.customarcheology.CustomArcheology;
 import cn.myrealm.customarcheology.enums.Config;
 import cn.myrealm.customarcheology.enums.NamespacedKeys;
 import cn.myrealm.customarcheology.listeners.BaseListener;
@@ -64,25 +63,25 @@ public class PlaceListener extends BaseListener {
             return;
         }
         event.setCancelled(true);
-        Bukkit.getScheduler().runTaskLater(CustomArcheology.plugin, () -> {
-            Location playerLocation = event.getPlayer().getLocation().getBlock().getLocation();
-            if (!location.getBlock().getType().isAir() || playerLocation.equals(location) || playerLocation.add(0, 1, 0).equals(location)) {
-                return;
+
+        Location playerLocation = event.getPlayer().getLocation().getBlock().getLocation();
+        if (!location.getBlock().getType().isAir() || playerLocation.equals(location) || playerLocation.add(0, 1, 0).equals(location)) {
+            return;
+        }
+
+        PacketUtil.swingItem(event.getPlayer());
+        ArcheologyBlock block = blockManager.getBlock(blockId);
+        if (block != null) {
+            blockManager.placeBlock(block, location);
+            if (event.getPlayer().getGameMode().equals(GameMode.SURVIVAL)) {
+                itemStack.setAmount(itemStack.getAmount() - 1);
+                event.getPlayer().getInventory().setItemInMainHand(itemStack);
             }
-            PacketUtil.swingItem(event.getPlayer());
-            ArcheologyBlock block = blockManager.getBlock(blockId);
-            if (block != null) {
-                blockManager.placeBlock(block, location);
-                if (event.getPlayer().getGameMode().equals(GameMode.SURVIVAL)) {
-                    itemStack.setAmount(itemStack.getAmount() - 1);
-                    event.getPlayer().getInventory().setItemInMainHand(itemStack);
-                }
-                if (Config.DEBUG.asBoolean()) {
-                    Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §fPlaced block at: " + location);
-                }
-                event.getPlayer().playSound(event.getPlayer(), blockManager.getBlock(blockId).getPlaceSound(), 1, 1);
+            if (Config.DEBUG.asBoolean()) {
+                Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §fPlaced block at: " + location);
             }
-        }, 1);
+            event.getPlayer().playSound(event.getPlayer(), blockManager.getBlock(blockId).getPlaceSound(), 1, 1);
+        }
     }
 
 }

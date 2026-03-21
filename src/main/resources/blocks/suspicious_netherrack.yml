@@ -3,6 +3,7 @@ general:
   replace-block: netherrack
   biomes: all
   distribution: 1 ~ 127
+  respawn-delay: -1
   max-per-chunk: 16
   loot-tables:
     - "stone"

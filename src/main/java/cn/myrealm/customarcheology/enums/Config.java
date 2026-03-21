@@ -16,6 +16,7 @@ public enum Config {
     // config_files
     CONFIG_FILES_GENERATE_DEFAULT_FILES("config-files.generate-default-files", true),
     CONFIG_FILES_LANGUAGE("config-files.language", "en_US"),
+    CONFIG_FILES_PER_PLAYER_LANGUAGE("config-files.per-player-language", true),
     // debug
     DEBUG("debug", false),
     // database

@@ -128,6 +128,7 @@ public final class CustomArcheology extends JavaPlugin {
         command.registerSubCommand(new ArchifyCommand());
         command.registerSubCommand(new DeArchifyCommand());
         command.registerSubCommand(new PlaceCommand());
+        command.registerSubCommand(new RemoveBlockCommand());
         //noinspection ConstantConditions
         getCommand("customarcheology").setExecutor(command);
         //noinspection ConstantConditions

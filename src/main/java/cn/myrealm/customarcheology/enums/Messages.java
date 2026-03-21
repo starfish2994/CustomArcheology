@@ -26,6 +26,7 @@ public enum Messages {
     ERROR_FAILED_TO_CREATE_TEXTURE_PACK("error.failed-to-create-texture-pack"),
     ERROR_WORLD_NOT_FOUND("error.world-not-found"),
     ERROR_BLOCK_NOT_FOUND("error.block-not-found"),
+    ERROR_ARCHEOLOGY_BLOCK_NOT_FOUND("error.archeology-block-not-found"),
     ERROR_BIOMES_NOT_FOUND("error.biomes-not-found"),
     ERROR_TOOL_NOT_FOUND("error.tool-not-found"),
     ERROR_PLAYER_NOT_ONLINE("error.player-not-online"),
@@ -34,6 +35,7 @@ public enum Messages {
     COMMAND_RELOAD("command.reload"),
     COMMAND_GIVE("command.give"),
     COMMAND_PLACE("command.place"),
+    COMMAND_REMOVEBLOCK("command.removeblock"),
     // command help messages
     COMMAND_HELP_HEAD("command.help-head"),
     COMMAND_HELP_DETAIL("command.help-detail"),
@@ -43,7 +45,9 @@ public enum Messages {
     GAME_CAN_NOT_BRUSH("game.can-not-brush"),
     GAME_ALREADY_BRUSHING("game.already-brushing"),
     GAME_GIVE("game.give"),
-    GAME_PLACE("game.place");
+    GAME_PLACE("game.place"),
+    GAME_REMOVE_BLOCK("game.remove-block"),
+    GAME_REMOVE_WORLD_BLOCKS("game.remove-world-blocks");
 
     private final String key;
     Messages(String key) {

@@ -541,6 +541,21 @@ public class DebuildItem {
                 section.set("use-cooldown.cooldown-seconds", useCooldownComponent.getCooldownSeconds());
             }
 
+            // Use Cooldown
+            if (meta.hasUseCooldown()) {
+                UseCooldownComponent useCooldownComponent = meta.getUseCooldown();
+                ConfigurationSection cooldownSection = section.getConfigurationSection("use-cooldown");
+                if (cooldownSection == null) {
+                    cooldownSection = section.createSection("use-cooldown");
+                }
+                if (useCooldownComponent.getCooldownGroup() != null) {
+                    cooldownSection.set("cooldown-group", useCooldownComponent.getCooldownGroup().asString());
+                }
+                if (useCooldownComponent.getCooldownSeconds() >= 0) {
+                    cooldownSection.set("cooldown-seconds", useCooldownComponent.getCooldownSeconds());
+                }
+            }
+
             // Equippable
             if (meta.hasEquippable()) {
                 EquippableComponent equippableComponent = meta.getEquippable();

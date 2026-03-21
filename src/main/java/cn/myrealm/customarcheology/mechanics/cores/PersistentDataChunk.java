@@ -10,6 +10,7 @@ import cn.myrealm.customarcheology.mechanics.persistent_data.StringArrayTagType;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -50,8 +51,12 @@ public class PersistentDataChunk {
             if (chunk.getPersistentDataContainer().has(NamespacedKeys.ARCHEOLOGY_BLOCK_ITEM.getNamespacedKey(blockName), ITEM_STACK_TYPE)) {
                 reward = chunk.getPersistentDataContainer().get(NamespacedKeys.ARCHEOLOGY_BLOCK_ITEM.getNamespacedKey(blockName), ITEM_STACK_TYPE);
             }
+            Long respawnAt = null;
+            if (chunk.getPersistentDataContainer().has(NamespacedKeys.ARCHEOLOGY_BLOCK_RESPAWN.getNamespacedKey(blockName), PersistentDataType.LONG)) {
+                respawnAt = chunk.getPersistentDataContainer().get(NamespacedKeys.ARCHEOLOGY_BLOCK_RESPAWN.getNamespacedKey(blockName), PersistentDataType.LONG);
+            }
             if (Objects.nonNull(location)) {
-                FakeTileBlock fakeTileBlock = new FakeTileBlock(blockName, location, reward);
+                FakeTileBlock fakeTileBlock = new FakeTileBlock(blockName, location, reward, respawnAt);
                 if (fakeTileBlock.isValid()) {
                     loadedLocationBlocks.put(location, fakeTileBlock);
                 }
@@ -64,17 +69,31 @@ public class PersistentDataChunk {
             return;
         }
         for (FakeTileBlock fakeTileBlock : loadedLocationBlocks.values()) {
-            fakeTileBlock.removeBlock();
+            fakeTileBlock.prepareForChunkUnload();
         }
         saveBlockNames();
         saveBlockLocations();
         saveBlockRewards();
+        saveBlockRespawns();
     }
 
     private void saveBlockRewards() {
         for (FakeTileBlock fakeTileBlock : loadedLocationBlocks.values()) {
             if (Objects.nonNull(fakeTileBlock.getReward())) {
                 chunk.getPersistentDataContainer().set(NamespacedKeys.ARCHEOLOGY_BLOCK_ITEM.getNamespacedKey(fakeTileBlock.getBlockName()), ITEM_STACK_TYPE, fakeTileBlock.getReward() );
+            } else if (chunk.getPersistentDataContainer().has(NamespacedKeys.ARCHEOLOGY_BLOCK_ITEM.getNamespacedKey(fakeTileBlock.getBlockName()), ITEM_STACK_TYPE)) {
+                chunk.getPersistentDataContainer().remove(NamespacedKeys.ARCHEOLOGY_BLOCK_ITEM.getNamespacedKey(fakeTileBlock.getBlockName()));
+            }
+        }
+    }
+
+    private void saveBlockRespawns() {
+        for (FakeTileBlock fakeTileBlock : loadedLocationBlocks.values()) {
+            Long respawnAt = fakeTileBlock.getRespawnAt();
+            if (Objects.nonNull(respawnAt)) {
+                chunk.getPersistentDataContainer().set(NamespacedKeys.ARCHEOLOGY_BLOCK_RESPAWN.getNamespacedKey(fakeTileBlock.getBlockName()), PersistentDataType.LONG, respawnAt);
+            } else if (chunk.getPersistentDataContainer().has(NamespacedKeys.ARCHEOLOGY_BLOCK_RESPAWN.getNamespacedKey(fakeTileBlock.getBlockName()), PersistentDataType.LONG)) {
+                chunk.getPersistentDataContainer().remove(NamespacedKeys.ARCHEOLOGY_BLOCK_RESPAWN.getNamespacedKey(fakeTileBlock.getBlockName()));
             }
         }
     }
@@ -99,14 +118,39 @@ public class PersistentDataChunk {
         }
         String removedBlockData = loadedLocationBlocks.get(location).getBlockName();
         loadedLocationBlocks.get(location).removeBlock();
+        unregisterBlockData(location, removedBlockData);
+    }
+
+    public int removeAllBlocks() {
+        List<Location> locations = new ArrayList<>(loadedLocationBlocks.keySet());
+        for (Location location : locations) {
+            removeBlock(location);
+        }
+        return locations.size();
+    }
+
+    public void unregisterBlock(Location location) {
+        location = location.getBlock().getLocation();
+        if (!loadedLocationBlocks.containsKey(location)) {
+            return;
+        }
+        FakeTileBlock fakeTileBlock = loadedLocationBlocks.remove(location);
+        String removedBlockData = fakeTileBlock.getBlockName();
+        fakeTileBlock.unregisterBlock();
+        unregisterBlockData(location, removedBlockData);
+    }
+
+    private void unregisterBlockData(Location location, String removedBlockData) {
         blockNameList.remove(removedBlockData);
-        loadedLocationBlocks.remove(location);
         saveBlockNames();
         if (chunk.getPersistentDataContainer().has(NamespacedKeys.ARCHEOLOGY_BLOCK_LOC.getNamespacedKey(removedBlockData), LOCATION_TYPE)) {
             chunk.getPersistentDataContainer().remove(NamespacedKeys.ARCHEOLOGY_BLOCK_LOC.getNamespacedKey(removedBlockData));
         }
         if (chunk.getPersistentDataContainer().has(NamespacedKeys.ARCHEOLOGY_BLOCK_ITEM.getNamespacedKey(removedBlockData), ITEM_STACK_TYPE)) {
             chunk.getPersistentDataContainer().remove(NamespacedKeys.ARCHEOLOGY_BLOCK_ITEM.getNamespacedKey(removedBlockData));
+        }
+        if (chunk.getPersistentDataContainer().has(NamespacedKeys.ARCHEOLOGY_BLOCK_RESPAWN.getNamespacedKey(removedBlockData), PersistentDataType.LONG)) {
+            chunk.getPersistentDataContainer().remove(NamespacedKeys.ARCHEOLOGY_BLOCK_RESPAWN.getNamespacedKey(removedBlockData));
         }
     }
 
@@ -126,14 +170,22 @@ public class PersistentDataChunk {
     }
 
     public boolean isArcheologyBlock(Location location) {
-        return loadedLocationBlocks.containsKey(location);
+        return loadedLocationBlocks.containsKey(location) && loadedLocationBlocks.get(location).isActive();
     }
 
     public ArcheologyBlock getArcheologyBlock(Location location) {
-        if (loadedLocationBlocks.containsKey(location)) {
+        if (loadedLocationBlocks.containsKey(location) && loadedLocationBlocks.get(location).isActive()) {
             return loadedLocationBlocks.get(location).getArcheologyBlock();
         }
         return null;
+    }
+
+    public boolean isManagedBlock(Location location) {
+        return loadedLocationBlocks.containsKey(location);
+    }
+
+    public boolean isRespawningBlock(Location location) {
+        return loadedLocationBlocks.containsKey(location) && loadedLocationBlocks.get(location).isCoolingDown();
     }
 
 
@@ -146,6 +198,16 @@ public class PersistentDataChunk {
             return loadedLocationBlocks.get(location);
         }
         return null;
+    }
+
+    public void startRespawnCooldown(Location location) {
+        location = location.getBlock().getLocation();
+        if (!loadedLocationBlocks.containsKey(location)) {
+            return;
+        }
+        loadedLocationBlocks.get(location).startRespawnCooldown();
+        saveBlockRewards();
+        saveBlockRespawns();
     }
 
 }

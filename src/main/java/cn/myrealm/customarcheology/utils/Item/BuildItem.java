@@ -175,7 +175,7 @@ public class BuildItem {
                         }
                         PotionEffectType potionEffectType = null;
                         if (CommonUtil.getMajorVersion(20)) {
-                            potionEffectType = Registry.POTION_EFFECT_TYPE.get(CommonUtil.parseNamespacedKey(effectParseResult[0]));
+                            potionEffectType = Registry.EFFECT.get(CommonUtil.parseNamespacedKey(effectParseResult[0]));
                         } else {
                             potionEffectType = PotionEffectType.getByName(effectParseResult[0]);
                         }
@@ -474,7 +474,7 @@ public class BuildItem {
                 }
                 PotionEffectType potionEffectType = null;
                 if (CommonUtil.getMajorVersion(20)) {
-                    potionEffectType = Registry.POTION_EFFECT_TYPE.get(CommonUtil.parseNamespacedKey(effectParseResult[0]));
+                    potionEffectType = Registry.EFFECT.get(CommonUtil.parseNamespacedKey(effectParseResult[0]));
                 } else {
                     potionEffectType = PotionEffectType.getByName(effectParseResult[0]);
                 }
@@ -673,7 +673,7 @@ public class BuildItem {
                 }
                 PotionEffectType potionEffectType;
                 if (CommonUtil.getMajorVersion(20)) {
-                    potionEffectType = Registry.POTION_EFFECT_TYPE.get(CommonUtil.parseNamespacedKey(effectParseResult[0]));
+                    potionEffectType = Registry.EFFECT.get(CommonUtil.parseNamespacedKey(effectParseResult[0]));
                 } else {
                     potionEffectType = PotionEffectType.getByName(effectParseResult[0]);
                 }
@@ -843,6 +843,7 @@ public class BuildItem {
                 if (cooldownSeconds >= 0) {
                     useCooldownComponent.setCooldownSeconds((float) cooldownSeconds);
                 }
+                meta.setUseCooldown(useCooldownComponent);
             }
 
             // Equippable

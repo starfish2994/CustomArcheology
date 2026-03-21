@@ -16,6 +16,7 @@ error:
   failed-to-create-texture-pack: "Falid to create resource pack!"
   world-not-found: "This world is not found!"
   block-not-found: "Can not found Archeology Block: {block-id}."
+  archeology-block-not-found: "No archaeology block found at {world} {pos}."
   tool-not-found: "Can not found Archeology Tool: {tool-id}."
   biomes-not-found: "Can not found Biome: {biomes-name}."
   player-not-online: "Player {player} is not online now."
@@ -26,6 +27,7 @@ command:
   archify: "Make specified world start generate Archeology Block."
   dearchify: "Make specified world no longer generate Archeology Block."
   place: "Directly place the archeology block in specified location."
+  removeblock: "Remove archaeology blocks in a world or at a specific location."
   help-head: "<#98FB98>&lCustomArcheology &7Made by @rzt1020 / @PQguanfang"
   help-detail: "&f{command-usage} &7- {command-description}"
 game:
@@ -34,3 +36,5 @@ game:
   already-brushing: "Other player is already archeology here!"
   give: "Successfully give {item-id}x{amount} to {player}!"
   place: "Successfully place {block-id} at {world} {pos}!"
+  remove-block: "Successfully removed archaeology block at {world} {pos}!"
+  remove-world-blocks: "Successfully removed {amount} archaeology block(s) in world {world}!"
