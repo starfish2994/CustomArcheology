@@ -21,16 +21,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.11.0</version> <!-- 升级到兼容Java17的版本 -->
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <version>3.5.1</version> <!-- 升级稳定版本 -->
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -39,6 +40,8 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <!-- 解决system依赖打包问题 -->
+                            <includeSystemScope>true</includeSystemScope>
                         </configuration>
                     </execution>
                 </executions>
@@ -53,6 +56,7 @@
     </build>
 
     <repositories>
+        <!-- 原有仓库保留，并补充缺失的关键仓库 -->
         <repository>
             <id>spigotmc-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
@@ -72,10 +76,6 @@
         <repository>
             <id>jitpack-repo</id>
             <url>https://jitpack.io</url>
-        </repository>
-        <repository>
-            <id>nexus</id>
-            <url>https://mvn.lumine.io/repository/maven-public/</url>
         </repository>
         <repository>
             <id>lumine-repo</id>
@@ -106,12 +106,16 @@
             <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
         <repository>
-            <id>worldedit</id>
+            <id>enginehub</id> <!-- 替换原worldedit仓库，使用官方正确ID -->
             <url>https://maven.enginehub.org/repo/</url>
         </repository>
         <repository>
             <id>codemc-releases</id>
             <url>https://repo.codemc.io/repository/maven-releases/</url>
+        </repository>
+        <repository>
+            <id>codemc-snapshots</id> <!-- 新增快照仓库 -->
+            <url>https://repo.codemc.io/repository/maven-snapshots/</url>
         </repository>
         <repository>
             <id>william278.net</id>
@@ -134,6 +138,16 @@
             <id>bg-repo</id>
             <url>https://repo.bg-software.com/repository/api/</url>
         </repository>
+        <!-- 新增MMOItems官方仓库 -->
+        <repository>
+            <id>indyuce</id>
+            <url>https://repo.indyuce.com/repository/maven-public/</url>
+        </repository>
+        <!-- 新增BentoBox仓库 -->
+        <repository>
+            <id>bentobox</id>
+            <url>https://repo.bentobox.world/content/groups/public/</url>
+        </repository>
     </repositories>
 
     <dependencyManagement>
@@ -149,6 +163,7 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- 修复System依赖：文件名/版本不一致问题 -->
         <dependency>
             <groupId>cn.superiormc</groupId>
             <artifactId>ManyouItems</artifactId>
@@ -157,17 +172,68 @@
             <systemPath>${project.basedir}/lib/ManyouItems-1.0.0.jar</systemPath>
         </dependency>
         <dependency>
-            <groupId>io.papermc.paper</groupId>
-            <artifactId>paper-api</artifactId>
-            <version>1.21.3-R0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>io.lumine</groupId>
             <artifactId>MythicDungeon</artifactId>
             <version>1.4.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MythicDungeons-1.4.0.jar</systemPath>
+            <systemPath>${project.basedir}/lib/MythicDungeons-1.4.0.jar</systemPath> <!-- 保留现有文件名，避免重命名 -->
+        </dependency>
+        <dependency>
+            <groupId>com.willfp</groupId>
+            <artifactId>EcoItems</artifactId>
+            <version>5.10.4</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/EcoItems-5.10.4.jar</systemPath> <!-- 建议重命名jar为无空格版本 -->
+        </dependency>
+        <dependency>
+            <groupId>com.willfp</groupId>
+            <artifactId>EcoArmor</artifactId>
+            <version>7.145.4</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/EcoArmor-7.145.4.jar</systemPath> <!-- 建议重命名jar为无空格版本 -->
+        </dependency>
+        <dependency>
+            <groupId>com.willfp</groupId>
+            <artifactId>libreforge</artifactId>
+            <version>4.25.4</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/libreforge-4.25.4-shadow.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.ssomar.score</groupId>
+            <artifactId>SCore</artifactId>
+            <version>5.24.7.9</version> <!-- 修正版本号匹配文件 -->
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/SCore-5.24.7.9.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.ssomar.score</groupId>
+            <artifactId>ExecutableItems</artifactId>
+            <version>7.24.7.9</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/ExecutableItems-7.24.7.9.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.nexomc</groupId>
+            <artifactId>nexo</artifactId>
+            <version>0.5.0-dev</version> <!-- 修正版本号匹配文件 -->
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/nexo-0.5.0-dev.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.bekvon.bukkit.residence</groupId>
+            <artifactId>Residence</artifactId>
+            <version>5.1.6.2</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/Residence5.1.6.2.jar</systemPath>
+        </dependency>
+
+        <!-- Provided依赖：修复快照版本/仓库问题 -->
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.21.3-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.LoneDev6</groupId>
@@ -186,27 +252,6 @@
             <artifactId>authlib</artifactId>
             <version>1.5.21</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.willfp</groupId>
-            <artifactId>EcoItems</artifactId>
-            <version>5.10.4</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/EcoItems v5.10.4.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>com.willfp</groupId>
-            <artifactId>EcoArmor</artifactId>
-            <version>7.145.4</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/EcoArmor v7.145.4.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>com.willfp</groupId>
-            <artifactId>libreforge</artifactId>
-            <version>4.25.4</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/libreforge-4.25.4-shadow.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.github.oraxen</groupId>
@@ -236,6 +281,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- 移除重复的Mythic-Dist依赖，保留高版本 -->
         <dependency>
             <groupId>io.lumine</groupId>
             <artifactId>Mythic-Dist</artifactId>
@@ -273,36 +319,17 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>io.lumine</groupId>
-            <artifactId>Mythic-Dist</artifactId>
-            <version>5.2.3</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>com.magmaguy</groupId>
             <artifactId>BetterStructures</artifactId>
             <version>1.6.8-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+        <!-- 替换WorldEdit快照版本为稳定版 -->
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-bukkit</artifactId>
-            <version>7.1.0-SNAPSHOT</version>
+            <version>7.1.0</version> <!-- 稳定版本，避免快照失效 -->
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ssomar.score</groupId>
-            <artifactId>SCore</artifactId>
-            <version>5.24.7.8</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/SCore-5.24.7.9.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>com.ssomar.score</groupId>
-            <artifactId>ExecutableItems</artifactId>
-            <version>7.24.7.9</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/ExecutableItems-7.24.7.9.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.github.retrooper</groupId>
@@ -310,25 +337,12 @@
             <version>2.6.0</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>com.nexomc</groupId>
-            <artifactId>nexo</artifactId>
-            <version>0.5.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/nexo-0.5.0-dev.jar</systemPath>
-        </dependency>
+        <!-- 替换WorldGuard快照版本为稳定版 -->
         <dependency>
             <groupId>com.sk89q.worldguard</groupId>
             <artifactId>worldguard-bukkit</artifactId>
-            <version>7.0.2-SNAPSHOT</version>
+            <version>7.0.2</version> <!-- 稳定版本，避免快照失效 -->
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.bekvon.bukkit.residence</groupId>
-            <artifactId>Residence</artifactId>
-            <version>5.1.6.2</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/Residence5.1.6.2.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.github.GriefPrevention</groupId>
@@ -379,7 +393,7 @@
         <dependency>
             <groupId>world.bentobox</groupId>
             <artifactId>bentobox</artifactId>
-            <version>2.7.0-SNAPSHOT</version>
+            <version>2.7.0</version> <!-- 替换快照为稳定版 -->
             <scope>provided</scope>
         </dependency>
         <dependency>
