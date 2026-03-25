@@ -1,12 +1,9 @@
 package cn.myrealm.customarcheology.utils.Item;
 
-import cn.myrealm.customarcheology.CustomArcheology;
 import cn.myrealm.customarcheology.managers.managers.HookManager;
 import cn.myrealm.customarcheology.utils.CommonUtil;
 import cn.myrealm.customarcheology.utils.NBTUtil;
 import com.google.common.collect.Multimap;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -27,8 +24,9 @@ import org.bukkit.inventory.meta.trim.ArmorTrim;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionType;
+import org.bukkit.profile.PlayerProfile;
 
-import java.lang.reflect.Field;
+import java.net.URL;
 import java.util.*;
 
 public class DebuildItem {
@@ -332,40 +330,21 @@ public class DebuildItem {
         }
 
         // Skull
-        if (meta instanceof SkullMeta) {
-            SkullMeta skullMeta = (SkullMeta) meta;
+        if (meta instanceof SkullMeta skullMeta) {
             try {
-                if (skullMeta.hasOwner() && skullMeta.getOwningPlayer() != null) {
-                    if (skullMeta.getOwningPlayer().getName() != null) {
-                        section.set("skull", skullMeta.getOwningPlayer().getName());
-                    }
-                } else {
-                    Field field = skullMeta.getClass().getDeclaredField("profile");
-                    field.setAccessible(true);
-                    if (CustomArcheology.newSkullMethod) {
-                        Object playerProfile = field.get(skullMeta);
-                        if (playerProfile != null) {
-                            Field field2 = playerProfile.getClass().getDeclaredField("f");
-                            field2.setAccessible(true);
-                            GameProfile gameProfile = (GameProfile) field2.get(playerProfile);
-                            if (gameProfile != null) {
-                                Property property = gameProfile.getProperties().get("textures").iterator().next();
-                                Field field3 = property.getClass().getDeclaredField("value");
-                                field3.setAccessible(true);
-                                section.set("skull", field3.get(property));
-                            }
-                        }
-                    } else {
-                        GameProfile gameProfile = (GameProfile) field.get(skullMeta);
-                        if (gameProfile != null) {
-                            Property property = gameProfile.getProperties().get("textures").iterator().next();
-                            Field field3 = property.getClass().getDeclaredField("value");
-                            field3.setAccessible(true);
-                            section.set("skull", field3.get(property));
-                        }
+                PlayerProfile ownerProfile = skullMeta.getOwnerProfile();
+                if (ownerProfile != null) {
+                    ownerProfile.getTextures();
+                    URL skinUrl = ownerProfile.getTextures().getSkin();
+                    if (skinUrl != null) {
+                        section.set("skull", BuildItem.encodeSkinUrl(skinUrl));
                     }
                 }
-            } catch (Throwable throwable) {
+            } catch (Throwable ignored) {
+            }
+
+            if (skullMeta.getOwningPlayer() != null) {
+                section.set("skull", skullMeta.getOwningPlayer().getName());
             }
         }
 

@@ -1,6 +1,5 @@
 package cn.myrealm.customarcheology.utils.Item;
 
-import cn.myrealm.customarcheology.CustomArcheology;
 import cn.myrealm.customarcheology.managers.managers.BlockManager;
 import cn.myrealm.customarcheology.managers.managers.HookManager;
 import cn.myrealm.customarcheology.managers.managers.ToolManager;
@@ -9,8 +8,6 @@ import cn.myrealm.customarcheology.utils.CommonUtil;
 import cn.myrealm.customarcheology.utils.NBTUtil;
 import com.google.common.base.Enums;
 import com.google.common.collect.MultimapBuilder;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -36,13 +33,19 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
 import org.bukkit.tag.DamageTypeTags;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Matcher;
 
 public class BuildItem {
+
+    private static final java.util.regex.Pattern TEXTURE_URL_PATTERN = java.util.regex.Pattern.compile("\"url\"\\s*:\\s*\"(https?://textures\\.minecraft\\.net/texture/[^\"]+)\"");
+
     public static ItemStack buildItemStack(ConfigurationSection section,
                                            String... args) {
         ItemStack item = new ItemStack(Material.STONE);
@@ -558,34 +561,17 @@ public class BuildItem {
         if (meta instanceof SkullMeta skullMeta) {
             String skullTextureNameKey = section.getString("skull-meta", section.getString("skull"));
             if (skullTextureNameKey != null) {
-                if (CustomArcheology.newSkullMethod) {
-                    try {
-                        Class<?> profileClass = Class.forName("net.minecraft.world.item.component.ResolvableProfile");
-                        Constructor<?> constroctor = profileClass.getConstructor(GameProfile.class);
-                        GameProfile profile = new GameProfile(UUID.randomUUID(), "");
-                        profile.getProperties().put("textures", new Property("textures", skullTextureNameKey));
-                        try {
-                            Method mtd = skullMeta.getClass().getDeclaredMethod("setProfile", profileClass);
-                            mtd.setAccessible(true);
-                            mtd.invoke(skullMeta, constroctor.newInstance(profile));
-                        } catch (Exception exception) {
-                            exception.printStackTrace();
-                            Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[ManyouItems] §cError: Can not parse skull texture in a item!");
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                try {
+                    URL skinUrl = resolveSkinUrl(skullTextureNameKey);
+                    if (skinUrl != null) {
+                        PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID(), "custom_head");
+                        PlayerTextures textures = profile.getTextures();
+                        textures.setSkin(skinUrl);
+                        profile.setTextures(textures);
+                        skullMeta.setOwnerProfile(profile);
                     }
-                } else {
-                    GameProfile profile = new GameProfile(UUID.randomUUID(), "");
-                    profile.getProperties().put("textures", new Property("textures", skullTextureNameKey));
-                    try {
-                        Method mtd = skullMeta.getClass().getDeclaredMethod("setProfile", GameProfile.class);
-                        mtd.setAccessible(true);
-                        mtd.invoke(skullMeta, profile);
-                    } catch (Exception exception) {
-                        exception.printStackTrace();
-                        Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[ManyouItems] §cError: Can not parse skull texture in a item!");
-                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }
@@ -920,5 +906,34 @@ public class BuildItem {
         item.setItemMeta(meta);
 
         return item;
+    }
+
+    private static URL resolveSkinUrl(String skull) throws Exception {
+        if (skull == null) {
+            return null;
+        }
+
+        String trimmedSkull = skull.trim();
+        if (trimmedSkull.isEmpty()) {
+            return null;
+        }
+
+        if (trimmedSkull.startsWith("http://textures.minecraft.net/texture/")
+                || trimmedSkull.startsWith("https://textures.minecraft.net/texture/")) {
+            return new URL(trimmedSkull);
+        }
+
+        String json = new String(Base64.getDecoder().decode(trimmedSkull), StandardCharsets.UTF_8);
+        Matcher matcher = TEXTURE_URL_PATTERN.matcher(json);
+
+        if (matcher.find()) {
+            return new URL(matcher.group(1));
+        }
+        return null;
+    }
+
+    public static String encodeSkinUrl(URL skinUrl) {
+        String textureJson = "{\"textures\":{\"SKIN\":{\"url\":\"" + skinUrl + "\"}}}";
+        return Base64.getEncoder().encodeToString(textureJson.getBytes(StandardCharsets.UTF_8));
     }
 }
