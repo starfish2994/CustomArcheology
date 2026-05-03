@@ -242,17 +242,21 @@
             <version>5.5.1</version>
             <scope>provided</scope>
         </dependency>
+        <!-- 修改为system scope -->
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
             <version>2.11.2</version>
-            <scope>provided</scope>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/PlaceholderAPI-2.11.2.jar</systemPath>
         </dependency>
+        <!-- 修改为system scope -->
         <dependency>
             <groupId>net.Indyuce</groupId>
             <artifactId>MMOItems</artifactId>
             <version>6.6.1</version>
-            <scope>provided</scope>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/MMOItems-6.6.1.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.willfp</groupId>
@@ -278,17 +282,21 @@
             <version>5.2.3</version>
             <scope>provided</scope>
         </dependency>
+        <!-- 修改为system scope -->
         <dependency>
             <groupId>com.magmaguy</groupId>
             <artifactId>BetterStructures</artifactId>
             <version>1.6.8-SNAPSHOT</version>
-            <scope>provided</scope>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/BetterStructures-1.6.8-SNAPSHOT.jar</systemPath>
         </dependency>
+        <!-- 修改为system scope (release版建议直接用 7.1.0.jar，如果你下载的是7.1.0-SNAPSHOT.jar请改名) -->
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-bukkit</artifactId>
-            <version>7.1.0-SNAPSHOT</version>
-            <scope>provided</scope>
+            <version>7.1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/worldedit-bukkit-7.1.0.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.ssomar.score</groupId>
@@ -322,11 +330,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- 修改为system scope (release版建议直接用 7.0.2.jar，如果你下载的是7.0.2-SNAPSHOT.jar请改名) -->
         <dependency>
             <groupId>com.sk89q.worldguard</groupId>
             <artifactId>worldguard-bukkit</artifactId>
-            <version>7.0.2-SNAPSHOT</version>
-            <scope>provided</scope>
+            <version>7.0.2</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/worldguard-bukkit-7.0.2.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.bekvon.bukkit.residence</groupId>
