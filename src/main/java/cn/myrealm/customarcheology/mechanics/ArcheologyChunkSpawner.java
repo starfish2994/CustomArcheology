@@ -58,7 +58,7 @@ public class ArcheologyChunkSpawner {
                 for (GeneratedStructure gs : chunk.getStructures(block.getStructure())) {
                     for (int i = 0; i < maxPerChunk; i++) {
                         Block newBlock = CommonUtil.getRandomBlock(chunk, distribution);
-                        if (!usedBlocks.contains(newBlock) && Objects.equals(newBlock.getType(), block.getType())) {
+                        if (!usedBlocks.contains(newBlock) && block.matchesReplaceBlock(newBlock)) {
                             if (Objects.isNull(biomes) || biomes.contains(newBlock.getBiome())) {
                                 if (!gs.getBoundingBox().contains(newBlock.getBoundingBox())) {
                                     continue;
@@ -72,7 +72,7 @@ public class ArcheologyChunkSpawner {
             } else if (block.isGaussian()) {
                 for (int i = 0; i < maxPerChunk; i++) {
                     Block newBlock = CommonUtil.getGaussianRandomBlock(chunk, distribution, block.getGaussianMean(), block.getGaussianStdDev());
-                    if (!usedBlocks.contains(newBlock) && Objects.equals(newBlock.getType(), block.getType())) {
+                    if (!usedBlocks.contains(newBlock) && block.matchesReplaceBlock(newBlock)) {
                         if (Objects.isNull(biomes) || biomes.contains(newBlock.getBiome())) {
                             setBlock(newBlock.getLocation(), block);
                         }
@@ -82,7 +82,7 @@ public class ArcheologyChunkSpawner {
             } else if (!block.isBetterStructure() || !Config.HOOK_BETTERSTRUCTURES.asBoolean()) {
                 for (int i = 0; i < maxPerChunk; i++) {
                     Block newBlock = CommonUtil.getRandomBlock(chunk, distribution);
-                    if (!usedBlocks.contains(newBlock) && Objects.equals(newBlock.getType(), block.getType())) {
+                    if (!usedBlocks.contains(newBlock) && block.matchesReplaceBlock(newBlock)) {
                         if (Objects.isNull(biomes) || biomes.contains(newBlock.getBiome())) {
                             setBlock(newBlock.getLocation(), block);
                         }
@@ -98,6 +98,9 @@ public class ArcheologyChunkSpawner {
     }
 
     private void setBlock(Location location, ArcheologyBlock block) {
+        if (dataChunk.isManagedBlock(location)) {
+            return;
+        }
         if (Config.LOG_GENERATED_BLOCK.asBoolean()) {
             Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §fGenerated " + block.getName() + " archeology block at: " +
                     location.getWorld().getName() + ", " + location.getBlockX() + ", " +

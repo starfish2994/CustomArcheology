@@ -1,10 +1,10 @@
 package cn.myrealm.customarcheology.mechanics.cores;
 
-
 import cn.myrealm.customarcheology.CustomArcheology;
 import cn.myrealm.customarcheology.enums.Config;
 import cn.myrealm.customarcheology.enums.Messages;
 import cn.myrealm.customarcheology.enums.NamespacedKeys;
+import cn.myrealm.customarcheology.hooks.craftengine.CraftEngineSupport;
 import cn.myrealm.customarcheology.managers.managers.LootManager;
 import cn.myrealm.customarcheology.managers.managers.system.LanguageManager;
 import cn.myrealm.customarcheology.managers.managers.system.TextureManager;
@@ -13,6 +13,7 @@ import cn.myrealm.customarcheology.utils.CommonUtil;
 import cn.myrealm.customarcheology.utils.ItemUtil;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.generator.structure.Structure;
@@ -33,6 +34,7 @@ public class ArcheologyBlock {
     private final String name;
     private String displayName;
     private Material replaceBlock;
+    private String craftEngineReplaceBlock;
     private boolean valid;
     private State defaultState,
                   finishedState;
@@ -50,13 +52,32 @@ public class ArcheologyBlock {
     }
 
     public ItemStack generateItemStack(int amount) {
+        if (CustomArcheology.plugin.getBlockMode() == BlockMode.CRAFTENGINE) {
+            return CraftEngineSupport.createItem(this, amount);
+        }
+        return generateLegacyItemStack(amount, defaultState);
+    }
+
+    public String getCraftEngineBlockId() {
+        return config.getString("craftengine.block", "customarcheology:" + name);
+    }
+
+    public String getCraftEngineItemId() {
+        return config.getString("craftengine.item", getCraftEngineBlockId());
+    }
+
+    public String getCraftEngineFinishedBlock() {
+        return config.getString("craftengine.finished-block", "minecraft:" + finishedState.getMaterial().name().toLowerCase(Locale.ROOT));
+    }
+
+    public ItemStack generateLegacyItemStack(int amount, State state) {
         if (!isValid()) {
             throw new IllegalStateException("This block is not valid");
         }
         ItemStack itemStack = new ItemStack(Config.BLOCK_MATERIAL.asMaterial());
         ItemMeta itemMeta = itemStack.getItemMeta();
         if (itemMeta != null) {
-            itemMeta.setCustomModelData(defaultState.getCustomModelData());
+            itemMeta.setCustomModelData(state.getCustomModelData());
             itemMeta.setDisplayName(LanguageManager.parseColor(displayName));
             itemMeta.getPersistentDataContainer().set(NamespacedKeys.IS_ARCHEOLOGY_ITEM.getNamespacedKey(), PersistentDataType.BOOLEAN, true);
             itemMeta.getPersistentDataContainer().set(NamespacedKeys.ARCHEOLOGY_BLOCK_ID.getNamespacedKey(), PersistentDataType.STRING, name);
@@ -66,19 +87,15 @@ public class ArcheologyBlock {
         return itemStack;
     }
 
-    public ItemStack generateItemStack(int amount, State state) {
-        ItemStack itemStack = generateItemStack(amount);
-        ItemMeta itemMeta = itemStack.getItemMeta();
-        if (itemMeta != null) {
-            itemMeta.setCustomModelData(state.getCustomModelData());
-        }
-        itemStack.setItemMeta(itemMeta);
-        return itemStack;
-    }
-
     private void loadConfig() {
         ConfigurationSection section = Keys.STATES.asSection(config);
-        replaceBlock = Material.getMaterial(Keys.REPLACE_BLOCK.asString(config).toUpperCase());
+        String replaceBlockName = Keys.REPLACE_BLOCK.asString(config);
+        replaceBlock = Material.matchMaterial(replaceBlockName);
+        if (replaceBlock == null && replaceBlockName.contains(":")
+                && CustomArcheology.plugin.getBlockMode() == BlockMode.CRAFTENGINE) {
+            craftEngineReplaceBlock = replaceBlockName.toLowerCase(Locale.ROOT);
+            replaceBlock = Material.STONE;
+        }
         if (Objects.isNull(section) || Objects.isNull(replaceBlock) || !replaceBlock.isBlock()) {
             return;
         }
@@ -101,7 +118,11 @@ public class ArcheologyBlock {
         customLootTables = new ArrayList<>();
         LootManager lootManager = LootManager.getInstance();
         for (String lootTableName : Keys.LOOT_TABLES.asStringList(config)) {
-            customLootTables.add(lootManager.getCustomLootTable(lootTableName));
+            CustomLootTable table = lootManager.getCustomLootTable(lootTableName);
+            if (table == null) {
+                throw new IllegalArgumentException("Unknown loot table: " + lootTableName);
+            }
+            customLootTables.add(table);
         }
         if (customLootTables.isEmpty()) {
             return;
@@ -162,12 +183,11 @@ public class ArcheologyBlock {
         String lootTableName = Keys.TOOL_LOOT_TABLES.asString(section);
         if (lootTableName == null || LootManager.getInstance().getCustomLootTable(lootTableName) == null) {
             CustomLootTable customLootTable = customLootTables.get(CustomArcheology.RANDOM.nextInt(customLootTables.size()));
-            if (customLootTable.generateItem() == null) {
-                return new ItemStack(Material.STONE);
-            }
-            return customLootTable.generateItem();
+            ItemStack result = customLootTable.generateItem();
+            return result == null ? new ItemStack(Material.STONE) : result;
         }
-        return LootManager.getInstance().getCustomLootTable(lootTableName).generateItem();
+        ItemStack result = LootManager.getInstance().getCustomLootTable(lootTableName).generateItem();
+        return result == null ? new ItemStack(Material.STONE) : result;
     }
 
     public State getDefaultState() {
@@ -181,7 +201,21 @@ public class ArcheologyBlock {
     }
 
     public Material getType() {
+        if (craftEngineReplaceBlock != null) {
+            return CraftEngineSupport.getBukkitMaterial(craftEngineReplaceBlock);
+        }
         return replaceBlock;
+    }
+
+    public String getCraftEngineReplaceBlock() {
+        return craftEngineReplaceBlock;
+    }
+
+    public boolean matchesReplaceBlock(Block block) {
+        if (craftEngineReplaceBlock != null) {
+            return CraftEngineSupport.matchesBlock(block, craftEngineReplaceBlock);
+        }
+        return block.getType() == replaceBlock;
     }
 
     public boolean canBrush(ItemStack tool) {
@@ -192,7 +226,8 @@ public class ArcheologyBlock {
     public double getEfficiency(ItemStack tool) {
         String toolId = ItemUtil.getToolId(tool);
         ConfigurationSection section = Objects.requireNonNull(Keys.BRUSH_TOOLS.asSection(config)).getConfigurationSection(toolId);
-        return Keys.EFFICIENCY.asDouble(section);
+        double value = Keys.EFFICIENCY.asDouble(section);
+        return Double.isFinite(value) && value > 0 ? value : 1.0;
     }
 
     public boolean isGaussian() {
@@ -227,7 +262,7 @@ public class ArcheologyBlock {
         return Registry.SOUNDS.get(CommonUtil.parseNamespacedKey(Keys.PLACE_SOUND.asString(config)));
     }
     public Sound getBrushSound() {
-        return Registry.SOUNDS.get(CommonUtil.parseNamespacedKey(Keys.BRUSH_SOUND.asString(config).toUpperCase()));
+        return Registry.SOUNDS.get(CommonUtil.parseNamespacedKey(Keys.BRUSH_SOUND.asString(config).toLowerCase(java.util.Locale.ROOT)));
     }
     public int getConsumeDurability() {
         return Keys.CONSUME_DURABILITY.asInt(config);
@@ -350,13 +385,12 @@ class State {
             material = null;
             texture = Keys.TEXTURE.asString(section);
         }
-        TextureManager textureManager = TextureManager.getInstance();
-        if (!textureManager.isBlockTextureExists(texture)) {
-            return;
+        if (!isFinished && (!Double.isFinite(hardness) || hardness <= 0)) {
+            throw new IllegalArgumentException("Stage hardness must be positive: " + section.getName());
         }
     }
     public int getIndex() {
-        return Integer.parseInt(section.getName().substring(section.getName().length() - 1));
+        return Integer.parseInt(section.getName().substring(section.getName().lastIndexOf('_') + 1));
     }
 
     public int getCustomModelData() {

@@ -1,5 +1,7 @@
 package cn.myrealm.customarcheology.listeners.bukkit;
 
+import cn.myrealm.customarcheology.mechanics.cores.BlockMode;
+
 
 import cn.myrealm.customarcheology.enums.Config;
 import cn.myrealm.customarcheology.listeners.BaseListener;
@@ -105,7 +107,7 @@ public class BreakListener extends BaseListener {
         Location loc = Objects.requireNonNull(event.getClickedBlock()).getLocation();
         ChunkManager chunkManager = ChunkManager.getInstance();
         ArcheologyBlock block = chunkManager.getArcheologyBlock(loc);
-        if (block != null) {
+        if (block != null && chunkManager.getInstanceAt(loc).getMode() == BlockMode.LEGACY) {
             loc.getBlock().setType(BARRIER);
         }
     }

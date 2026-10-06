@@ -14,6 +14,10 @@ public enum NamespacedKeys {
     ARCHEOLOGY_BLOCK_LOC("archeology_block_loc.{0}"),
     ARCHEOLOGY_BLOCK_ITEM("archeology_block_item.{0}"),
     ARCHEOLOGY_BLOCK_RESPAWN("archeology_block_respawn.{0}"),
+    ARCHEOLOGY_BLOCK_MODE("archeology_block_mode.{0}"),
+    ARCHEOLOGY_BLOCK_BACKEND("archeology_block_backend.{0}"),
+    ARCHEOLOGY_BLOCK_EXPECTED("archeology_block_expected.{0}"),
+    ARCHEOLOGY_BLOCK_ORIGINAL("archeology_block_original.{0}"),
     // item
     IS_ARCHEOLOGY_ITEM("is_archeology_item"),
     ARCHEOLOGY_BLOCK_ID("archeology_block_id"),

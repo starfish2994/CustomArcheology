@@ -3,11 +3,10 @@ package cn.myrealm.customarcheology.listeners.bukkit;
 
 import cn.myrealm.customarcheology.enums.NamespacedKeys;
 import cn.myrealm.customarcheology.listeners.BaseListener;
-import cn.myrealm.customarcheology.mechanics.Action;
+import cn.myrealm.customarcheology.managers.managers.ActionManager;
+import cn.myrealm.customarcheology.mechanics.actions.ActionContext;
 import cn.myrealm.customarcheology.mechanics.persistent_data.StringArrayTagType;
 import cn.myrealm.customarcheology.utils.CommonUtil;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityPickupItemEvent;
@@ -28,26 +27,20 @@ public class ItemListener extends BaseListener {
 
     @EventHandler
     public void onItemSpawnEntity(ItemSpawnEvent event) {
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            Item item = (Item) Bukkit.getEntity(event.getEntity().getUniqueId());
-            ItemMeta meta = null;
-            if (item != null) {
-                meta = item.getItemStack().getItemMeta();
-            }
-            StringArrayTagType strArray = new StringArrayTagType(StandardCharsets.UTF_8);
-            if (Objects.nonNull(meta) && meta.getPersistentDataContainer().has(NamespacedKeys.ARCHEOLOGY_EXECUTE_ACTIONS_SPAWN.getNamespacedKey(), strArray)) {
-                String[] actions = meta.getPersistentDataContainer().get(NamespacedKeys.ARCHEOLOGY_EXECUTE_ACTIONS_SPAWN.getNamespacedKey(), strArray);
-                if (Objects.nonNull(actions)) {
-                    for (int i = 0; i < event.getEntity().getItemStack().getAmount(); i++) {
-                        for (String action : actions) {
-                            Action.runAction(null, event.getLocation(), event.getEntity().getItemStack(), action);
-                        }
-                    }
+        ItemMeta meta = event.getEntity().getItemStack().getItemMeta();
+        StringArrayTagType strArray = new StringArrayTagType(StandardCharsets.UTF_8);
+        if (Objects.nonNull(meta) && meta.getPersistentDataContainer().has(
+                NamespacedKeys.ARCHEOLOGY_EXECUTE_ACTIONS_SPAWN.getNamespacedKey(), strArray)) {
+            String[] actions = meta.getPersistentDataContainer().get(
+                    NamespacedKeys.ARCHEOLOGY_EXECUTE_ACTIONS_SPAWN.getNamespacedKey(), strArray);
+            if (Objects.nonNull(actions)) {
+                for (int i = 0; i < event.getEntity().getItemStack().getAmount(); i++) {
+                    ActionManager.getInstance().runSerializedActions(actions,
+                            new ActionContext(null, event.getLocation(), event.getEntity().getItemStack()));
                 }
-                event.getEntity().remove();
-                event.setCancelled(true);
             }
-        }, 0L);
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
@@ -61,9 +54,8 @@ public class ItemListener extends BaseListener {
             String[] actions = meta.getPersistentDataContainer().get(NamespacedKeys.ARCHEOLOGY_EXECUTE_ACTIONS_PICK.getNamespacedKey(), strArray);
             if (Objects.nonNull(actions)) {
                 for (int i = 0; i < event.getItem().getItemStack().getAmount(); i++) {
-                    for (String action : actions) {
-                        Action.runAction(player, event.getItem().getLocation(), event.getItem().getItemStack(), action);
-                    }
+                    ActionManager.getInstance().runSerializedActions(actions,
+                            new ActionContext(player, event.getItem().getLocation(), event.getItem().getItemStack()));
                 }
             }
             event.getItem().remove();

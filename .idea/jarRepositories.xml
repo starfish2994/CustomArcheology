@@ -132,6 +132,11 @@
       <option name="url" value="https://hub.spigotmc.org/nexus/content/repositories/snapshots/" />
     </remote-repository>
     <remote-repository>
+      <option name="id" value="momirealms-releases" />
+      <option name="name" value="momirealms-releases" />
+      <option name="url" value="https://repo.momirealms.net/releases/" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="william278.net" />
       <option name="name" value="william278.net" />
       <option name="url" value="https://repo.william278.net/releases" />

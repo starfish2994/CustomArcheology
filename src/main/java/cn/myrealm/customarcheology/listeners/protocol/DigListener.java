@@ -1,5 +1,7 @@
 package cn.myrealm.customarcheology.listeners.protocol;
 
+import org.bukkit.entity.Player;
+
 import cn.myrealm.customarcheology.enums.Config;
 import cn.myrealm.customarcheology.listeners.BaseListener;
 import cn.myrealm.customarcheology.managers.managers.PlayerManager;
@@ -23,8 +25,8 @@ public class DigListener extends BaseListener {
             if (Config.DEBUG.asBoolean()) {
                 Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §fBreak and cancel brush.");
             }
-            PlayerManager playerManager = PlayerManager.getInstance();
-            playerManager.cancelBrush(event.getPlayer());
+            Player player = event.getPlayer();
+            Bukkit.getScheduler().runTask(plugin, () -> PlayerManager.getInstance().cancelBrush(player));
         }
     }
 }

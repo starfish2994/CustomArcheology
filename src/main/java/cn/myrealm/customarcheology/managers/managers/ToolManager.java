@@ -23,8 +23,11 @@ import java.util.Set;
 public class ToolManager extends BaseManager {
 
     private static final String TOOL_PATH = CustomArcheology.plugin.getDataFolder().getPath() + "/tools/";
+
     private static ToolManager instance;
+
     private Map<String, ArcheologyTool> toolMap;
+
     public ToolManager(JavaPlugin plugin) {
         super(plugin);
         instance = this;

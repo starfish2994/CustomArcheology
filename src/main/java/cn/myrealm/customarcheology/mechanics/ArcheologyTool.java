@@ -2,8 +2,10 @@ package cn.myrealm.customarcheology.mechanics;
 
 import cn.myrealm.customarcheology.CustomArcheology;
 import cn.myrealm.customarcheology.enums.NamespacedKeys;
+import cn.myrealm.customarcheology.hooks.craftengine.CraftEngineSupport;
 import cn.myrealm.customarcheology.managers.managers.system.LanguageManager;
 import cn.myrealm.customarcheology.managers.managers.system.TextureManager;
+import cn.myrealm.customarcheology.mechanics.cores.BlockMode;
 import cn.myrealm.customarcheology.utils.Item.BuildItem;
 import cn.myrealm.customarcheology.utils.ItemUtil;
 import org.bukkit.Bukkit;
@@ -17,6 +19,8 @@ import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.util.*;
@@ -31,43 +35,67 @@ public class ArcheologyTool {
                                 TEXTURE = "texture",
                                 RECIPE_ = "recipe_";
     private final String displayName, toolId;
+    private final String craftEngineItemId;
     private final List<String> lore;
     private final String texture;
     private final Map<String, Recipe> recipes;
     private ItemStack toolItem;
+    private BukkitTask initializationTask;
 
     public ArcheologyTool(FileConfiguration config, String toolId) {
         this.toolId = toolId;
+        this.craftEngineItemId = config.getString("craftengine.item", "customarcheology:" + toolId);
         this.displayName = config.getString(DISPLAY_NAME, null);
         this.lore = config.getStringList(LORE);
         this.texture = config.getString(TEXTURE, null);
         this.recipes = new HashMap<>();
-        Bukkit.getScheduler().runTaskLater(CustomArcheology.plugin,() -> {
-            int recipeIndex = 1;
-            while (Objects.nonNull(config.get(RECIPE_ + recipeIndex))) {
-                Map<String, ConfigurationSection> singleRecipe = new HashMap<>();
-                ConfigurationSection ingredientSection = config.getConfigurationSection(RECIPE_ + recipeIndex + ".ingredients");
-                if (ingredientSection == null) {
-                    continue;
+        if (CustomArcheology.plugin.getBlockMode() == BlockMode.CRAFTENGINE) {
+            initializationTask = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (CraftEngineSupport.isReady()) {
+                        initialize(config);
+                        cancel();
+                    }
                 }
-                for (String key : ingredientSection.getKeys(false)) {
-                    singleRecipe.put(key, ingredientSection.getConfigurationSection(key));
-                }
-                Recipe recipe = new Recipe(config.getStringList(RECIPE_ + recipeIndex + ".shape"), Objects.requireNonNull(singleRecipe));
-                this.recipes.put(RECIPE_ + recipeIndex, recipe);
-                recipeIndex ++;
-            }
+            }.runTaskTimer(CustomArcheology.plugin, 1L, 1L);
+        } else {
+            initializationTask = Bukkit.getScheduler().runTaskLater(CustomArcheology.plugin,
+                    () -> initialize(config), 40);
+        }
+    }
 
-            toolItem = generateItem();
-            recipes.values().forEach(recipe -> recipe.register(toolItem));
-        }, 40);
+    private void initialize(FileConfiguration config) {
+        int recipeIndex = 1;
+        while (Objects.nonNull(config.get(RECIPE_ + recipeIndex))) {
+            Map<String, ConfigurationSection> singleRecipe = new HashMap<>();
+            ConfigurationSection ingredientSection = config.getConfigurationSection(RECIPE_ + recipeIndex + ".ingredients");
+            if (ingredientSection == null) {
+                recipeIndex ++;
+                continue;
+            }
+            for (String key : ingredientSection.getKeys(false)) {
+                singleRecipe.put(key, ingredientSection.getConfigurationSection(key));
+            }
+            Recipe recipe = new Recipe(config.getStringList(RECIPE_ + recipeIndex + ".shape"), Objects.requireNonNull(singleRecipe));
+            this.recipes.put(RECIPE_ + recipeIndex, recipe);
+            recipeIndex ++;
+        }
+
+        toolItem = generateItem();
+        recipes.values().forEach(recipe -> recipe.register(toolItem));
     }
 
     public ItemStack generateItem() {
         if (Objects.nonNull(this.toolItem)) {
             return toolItem.clone();
         }
-        ItemStack itemStack = ItemUtil.generateItemStack(Material.BRUSH, TextureManager.getInstance().getToolCustommodeldata(texture), displayName, lore);
+        ItemStack itemStack;
+        if (CustomArcheology.plugin.getBlockMode() == BlockMode.CRAFTENGINE) {
+            itemStack = CraftEngineSupport.createToolItem(craftEngineItemId, 1);
+        } else {
+            itemStack = ItemUtil.generateItemStack(Material.BRUSH, TextureManager.getInstance().getToolCustommodeldata(texture), displayName, lore);
+        }
         assert itemStack.getItemMeta() != null;
         ItemMeta itemMeta = itemStack.getItemMeta();
         itemMeta.getPersistentDataContainer().set(NamespacedKeys.IS_ARCHEOLOGY_TOOL.getNamespacedKey(), PersistentDataType.BOOLEAN, true);
@@ -77,6 +105,9 @@ public class ArcheologyTool {
     }
 
     public void remove() {
+        if (initializationTask != null) {
+            initializationTask.cancel();
+        }
         recipes.values().forEach(Recipe::unregister);
     }
 

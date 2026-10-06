@@ -5,6 +5,7 @@ import cn.myrealm.customarcheology.enums.Config;
 import cn.myrealm.customarcheology.enums.Messages;
 import cn.myrealm.customarcheology.enums.SQLs;
 import cn.myrealm.customarcheology.managers.BaseManager;
+import cn.myrealm.customarcheology.mechanics.cores.BlockMode;
 import cn.myrealm.customarcheology.utils.CommonUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -78,7 +79,8 @@ public class TextureManager extends BaseManager {
         Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, ()-> {
             loadTextures();
             outputTextures();
-            if (Config.AUTO_COPY_RESOURCEPACK_ENABLED.asBoolean()) {
+            if (Config.AUTO_COPY_RESOURCEPACK_ENABLED.asBoolean()
+                    && CustomArcheology.plugin.getBlockMode() == BlockMode.LEGACY) {
                 copyResourcePack();
             }
             Bukkit.getScheduler().runTask(plugin, ()-> Bukkit.getConsoleSender().sendMessage(Messages.TEXTURE_PACK_CREATED.getMessageWithPrefix()));
@@ -199,7 +201,7 @@ public class TextureManager extends BaseManager {
                 override.delete(override.length() - 1, override.length());
             }
             try {
-                Files.write(new File(Path.PACK_MAIN_MODEL_PATH.toString(), Config.BLOCK_MATERIAL.asString().toLowerCase(Locale.ROOT) + ".json").toPath(), Template.MAIN_MODEL_TEMPLATE.toString().replace("%overrides%", override.toString()).getBytes());
+                Files.write(new File(Path.PACK_MAIN_MODEL_PATH.toString(), Config.BLOCK_MATERIAL.asString().toLowerCase(Locale.ROOT) + ".json").toPath(), Template.MAIN_MODEL_TEMPLATE.toString().replace("%baseModel%", TextureManager.getModelPath()).replace("%overrides%", override.toString()).getBytes());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -214,31 +216,8 @@ public class TextureManager extends BaseManager {
                         throw new RuntimeException(e);
                     }
 
-                    String brushModel = Template.BRUSH_MODEL_TEMPLATE.toString().replace("%toolId%", toolId),
-                           brushing0Model = Template.BRUSHING_0_MODEL_TEMPLATE.toString().replace("%toolId%", toolId),
-                           brushing1Model = Template.BRUSHING_1_MODEL_TEMPLATE.toString().replace("%toolId%", toolId),
-                           brushing2Model = Template.BRUSHING_2_MODEL_TEMPLATE.toString().replace("%toolId%", toolId),
-                           brushing3Model = Template.BRUSHING_3_MODEL_TEMPLATE.toString().replace("%toolId%", toolId),
-                           brushing4Model = Template.BRUSHING_4_MODEL_TEMPLATE.toString().replace("%toolId%", toolId),
-                           brushing5Model = Template.BRUSHING_5_MODEL_TEMPLATE.toString().replace("%toolId%", toolId),
-                           brushing6Model = Template.BRUSHING_6_MODEL_TEMPLATE.toString().replace("%toolId%", toolId),
-                           brushing7Model = Template.BRUSHING_7_MODEL_TEMPLATE.toString().replace("%toolId%", toolId),
-                           brushing8Model = Template.BRUSHING_8_MODEL_TEMPLATE.toString().replace("%toolId%", toolId),
-                           brushing9Model = Template.BRUSHING_9_MODEL_TEMPLATE.toString().replace("%toolId%", toolId),
-                           brushing10Model = Template.BRUSHING_10_MODEL_TEMPLATE.toString().replace("%toolId%", toolId);
                     try {
-                        Files.write(new File(Path.PACK_TOOL_MODEL_PATH.toString(), toolId + ".json").toPath(), brushModel.getBytes());
-                        Files.write(new File(Path.PACK_TOOL_MODEL_PATH.toString(), toolId + "_0.json").toPath(), brushing0Model.getBytes());
-                        Files.write(new File(Path.PACK_TOOL_MODEL_PATH.toString(), toolId + "_1.json").toPath(), brushing1Model.getBytes());
-                        Files.write(new File(Path.PACK_TOOL_MODEL_PATH.toString(), toolId + "_2.json").toPath(), brushing2Model.getBytes());
-                        Files.write(new File(Path.PACK_TOOL_MODEL_PATH.toString(), toolId + "_3.json").toPath(), brushing3Model.getBytes());
-                        Files.write(new File(Path.PACK_TOOL_MODEL_PATH.toString(), toolId + "_4.json").toPath(), brushing4Model.getBytes());
-                        Files.write(new File(Path.PACK_TOOL_MODEL_PATH.toString(), toolId + "_5.json").toPath(), brushing5Model.getBytes());
-                        Files.write(new File(Path.PACK_TOOL_MODEL_PATH.toString(), toolId + "_6.json").toPath(), brushing6Model.getBytes());
-                        Files.write(new File(Path.PACK_TOOL_MODEL_PATH.toString(), toolId + "_7.json").toPath(), brushing7Model.getBytes());
-                        Files.write(new File(Path.PACK_TOOL_MODEL_PATH.toString(), toolId + "_8.json").toPath(), brushing8Model.getBytes());
-                        Files.write(new File(Path.PACK_TOOL_MODEL_PATH.toString(), toolId + "_9.json").toPath(), brushing9Model.getBytes());
-                        Files.write(new File(Path.PACK_TOOL_MODEL_PATH.toString(), toolId + "_10.json").toPath(), brushing10Model.getBytes());
+                        outputToolModels(new File(Path.PACK_TOOL_MODEL_PATH.toString()).toPath(), toolId);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -304,6 +283,22 @@ public class TextureManager extends BaseManager {
 
     public boolean isBlockTextureExists(String blockId) {
         return blockCustommodeldataMap.containsKey(blockId);
+    }
+
+    public static void outputToolModels(java.nio.file.Path folder, String toolId) throws IOException {
+        Files.createDirectories(folder);
+        Files.writeString(folder.resolve(toolId + ".json"), Template.BRUSH_MODEL_TEMPLATE.toString().replace("%toolId%", toolId));
+        Files.writeString(folder.resolve(toolId + "_0.json"), Template.BRUSHING_0_MODEL_TEMPLATE.toString().replace("%toolId%", toolId));
+        Files.writeString(folder.resolve(toolId + "_1.json"), Template.BRUSHING_1_MODEL_TEMPLATE.toString().replace("%toolId%", toolId));
+        Files.writeString(folder.resolve(toolId + "_2.json"), Template.BRUSHING_2_MODEL_TEMPLATE.toString().replace("%toolId%", toolId));
+        Files.writeString(folder.resolve(toolId + "_3.json"), Template.BRUSHING_3_MODEL_TEMPLATE.toString().replace("%toolId%", toolId));
+        Files.writeString(folder.resolve(toolId + "_4.json"), Template.BRUSHING_4_MODEL_TEMPLATE.toString().replace("%toolId%", toolId));
+        Files.writeString(folder.resolve(toolId + "_5.json"), Template.BRUSHING_5_MODEL_TEMPLATE.toString().replace("%toolId%", toolId));
+        Files.writeString(folder.resolve(toolId + "_6.json"), Template.BRUSHING_6_MODEL_TEMPLATE.toString().replace("%toolId%", toolId));
+        Files.writeString(folder.resolve(toolId + "_7.json"), Template.BRUSHING_7_MODEL_TEMPLATE.toString().replace("%toolId%", toolId));
+        Files.writeString(folder.resolve(toolId + "_8.json"), Template.BRUSHING_8_MODEL_TEMPLATE.toString().replace("%toolId%", toolId));
+        Files.writeString(folder.resolve(toolId + "_9.json"), Template.BRUSHING_9_MODEL_TEMPLATE.toString().replace("%toolId%", toolId));
+        Files.writeString(folder.resolve(toolId + "_10.json"), Template.BRUSHING_10_MODEL_TEMPLATE.toString().replace("%toolId%", toolId));
     }
 
     public static boolean mkdirs(String path) {
@@ -388,8 +383,8 @@ enum Path {
 enum Template {
     // block templates
     BLOCK_MODEL_TEMPLATE("{\"parent\":\"block/cube_all\",\"textures\":{\"down\":\"customarcheology:block/%blockId%\",\"east\":\"customarcheology:block/%blockId%\",\"north\":\"customarcheology:block/%blockId%\",\"south\":\"customarcheology:block/%blockId%\",\"up\":\"customarcheology:block/%blockId%\",\"west\":\"customarcheology:block/%blockId%\",\"particle\":\"customarcheology:block/%blockId%\"}}"),
-    MAIN_MODEL_TEMPLATE("{\"parent\":\"minecraft:item/generated\",\"textures\":{\"layer0\":\"" + TextureManager.getModelPath() + "\"},\"overrides\":[%overrides%]}",
-            "{\"model\":{\"type\": \"range_dispatch\",\"property\":\"custom_model_data\",\"fallback\":{\"type\":\"model\",\"model\":\"" + TextureManager.getModelPath() + "\"},\"entries\":[%overrides%]}}"),
+    MAIN_MODEL_TEMPLATE("{\"parent\":\"minecraft:item/generated\",\"textures\":{\"layer0\":\"%baseModel%\"},\"overrides\":[%overrides%]}",
+            "{\"model\":{\"type\": \"range_dispatch\",\"property\":\"custom_model_data\",\"fallback\":{\"type\":\"model\",\"model\":\"%baseModel%\"},\"entries\":[%overrides%]}}"),
     OVERRIDE_TEMPLATE("{\"predicate\":{\"custom_model_data\":%custommodeldata%},\"model\":\"customarcheology:block/%blockId%\"}",
             "{\"threshold\":%custommodeldata%,\"model\":{\"type\":\"model\",\"model\":\"customarcheology:block/%blockId%\"}}"),
     // brush templates

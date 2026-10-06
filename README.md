@@ -33,6 +33,7 @@ With it, you can turn archaeology into a fully custom feature — even making pl
 ### 🎨 Resource Pack Integration
 - Automatically generates resource packs.
 - Seamless integration with **ItemsAdder** and **Oraxen**.
+- Supports a native **CraftEngine 26.8.2** block mode with automatic block and texture installation. See [CraftEngine mode](docs/craftengine.md).
 
 ---
 

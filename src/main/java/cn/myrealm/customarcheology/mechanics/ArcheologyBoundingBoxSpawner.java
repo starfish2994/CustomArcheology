@@ -44,7 +44,7 @@ public class ArcheologyBoundingBoxSpawner {
                 }
                 for (int i = 0; i < maxPerChunk; i++) {
                     Block newBlock = CommonUtil.getRandomBlock(world, boundingBox);
-                    if (!usedBlocks.contains(newBlock) && Objects.equals(newBlock.getType(), block.getType())) {
+                    if (!usedBlocks.contains(newBlock) && block.matchesReplaceBlock(newBlock)) {
                         if (Objects.isNull(biomes) || biomes.contains(newBlock.getBiome())) {
                             Bukkit.getScheduler().runTaskLater(CustomArcheology.plugin, () -> {
                                 setBlock(newBlock.getLocation(), block);
@@ -58,6 +58,9 @@ public class ArcheologyBoundingBoxSpawner {
     }
 
     private void setBlock(Location location, ArcheologyBlock block) {
+        if (ChunkManager.getInstance().isManagedBlock(location)) {
+            return;
+        }
         if (Config.LOG_GENERATED_BLOCK.asBoolean()) {
             Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §fGenerated " + block.getName() + " archeology block at: " +
                     location.getWorld().getName() + ", " + location.getBlockX() + ", " +

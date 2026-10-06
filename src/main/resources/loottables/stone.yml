@@ -15,14 +15,18 @@ rewards:
     amount: 1~2
     chance: 10
     actions:
-      - 'console_command: say hello, {player}'
+      1:
+        type: console_command
+        command: 'say hello, {player}'
   reward_4:
     display-item:
       material: dirt
     amount: 1~3
     chance: 20
     spawn-actions:
-      - 'entity_spawn: ZOMBIE'
+      1:
+        type: entity_spawn
+        entity: ZOMBIE
   reward_5:
     reward:
       material: suspicious_stone

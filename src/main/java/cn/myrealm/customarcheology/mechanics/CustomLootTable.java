@@ -2,6 +2,7 @@ package cn.myrealm.customarcheology.mechanics;
 
 import cn.myrealm.customarcheology.CustomArcheology;
 import cn.myrealm.customarcheology.enums.NamespacedKeys;
+import cn.myrealm.customarcheology.managers.managers.ActionManager;
 import cn.myrealm.customarcheology.mechanics.persistent_data.ItemStackTagType;
 import cn.myrealm.customarcheology.mechanics.persistent_data.StringArrayTagType;
 import cn.myrealm.customarcheology.utils.CommonUtil;
@@ -60,14 +61,10 @@ public class CustomLootTable {
         if (amount == null) {
             amount = new Point(1, 1);
         }
-        List<String> actions = section.getStringList(ACTIONS);
-        if (actions.isEmpty()) {
-            actions = null;
-        }
-        List<String> spawnActions = section.getStringList(SPAWN_ACTIONS);
-        if (spawnActions.isEmpty()) {
-            spawnActions = null;
-        }
+        String actions = ActionManager.getInstance().serializeActions(
+                section.getConfigurationSection(ACTIONS), section.getStringList(ACTIONS));
+        String spawnActions = ActionManager.getInstance().serializeActions(
+                section.getConfigurationSection(SPAWN_ACTIONS), section.getStringList(SPAWN_ACTIONS));
         int chance = section.getInt(CHANCE, 1);
         if (Objects.isNull(itemIdentifier)) {
             if (Objects.isNull(displayIdentifier)) {
@@ -94,13 +91,13 @@ public class CustomLootTable {
         private final ConfigurationSection displayItem;
         private final Point amount;
         private final int chance;
-        private final List<String> actions;
-        private final List<String> spawnActions;
+        private final String actions;
+        private final String spawnActions;
 
         public Reward(@NotNull ConfigurationSection realItem,
                       @Nullable ConfigurationSection displayItem,
-                      @Nullable List<String> actions,
-                      @Nullable List<String> spawnActions,
+                      @Nullable String actions,
+                      @Nullable String spawnActions,
                       @NotNull Point amount,
                       int chance) {
             this.realItem = realItem;
@@ -126,31 +123,29 @@ public class CustomLootTable {
                 ItemMeta itemMeta = displayItemStack.getItemMeta();
                 itemMeta.getPersistentDataContainer().set(NamespacedKeys.ARCHEOLOGY_REAL_ITEM.getNamespacedKey(), new ItemStackTagType(), realItemStack);
                 displayItemStack.setItemMeta(itemMeta);
-                if (Objects.nonNull(spawnActions)) {
-                    itemMeta.getPersistentDataContainer().set(NamespacedKeys.ARCHEOLOGY_EXECUTE_ACTIONS_SPAWN.getNamespacedKey(), new StringArrayTagType(StandardCharsets.UTF_8), actions.toArray(new String[0]));
-                    realItemStack.setItemMeta(itemMeta);
-                }
-                if (Objects.nonNull(actions)) {
-                    Objects.requireNonNull(realItemStack.getItemMeta());
-                    ItemMeta realItemMeta = realItemStack.getItemMeta();
-                    realItemMeta.getPersistentDataContainer().set(NamespacedKeys.ARCHEOLOGY_EXECUTE_ACTIONS_PICK.getNamespacedKey(), new StringArrayTagType(StandardCharsets.UTF_8), spawnActions.toArray(new String[0]));
-                    realItemStack.setItemMeta(itemMeta);
-                }
+                applyActions(realItemStack);
                 return displayItemStack;
             }
-            if (Objects.nonNull(actions)) {
-                Objects.requireNonNull(realItemStack.getItemMeta());
-                ItemMeta itemMeta = realItemStack.getItemMeta();
-                itemMeta.getPersistentDataContainer().set(NamespacedKeys.ARCHEOLOGY_EXECUTE_ACTIONS_PICK.getNamespacedKey(), new StringArrayTagType(StandardCharsets.UTF_8), actions.toArray(new String[0]));
-                realItemStack.setItemMeta(itemMeta);
-            }
-            if (Objects.nonNull(spawnActions)) {
-                Objects.requireNonNull(realItemStack.getItemMeta());
-                ItemMeta itemMeta = realItemStack.getItemMeta();
-                itemMeta.getPersistentDataContainer().set(NamespacedKeys.ARCHEOLOGY_EXECUTE_ACTIONS_SPAWN.getNamespacedKey(), new StringArrayTagType(StandardCharsets.UTF_8), spawnActions.toArray(new String[0]));
-                realItemStack.setItemMeta(itemMeta);
-            }
+            applyActions(realItemStack);
             return realItemStack;
+        }
+
+        private void applyActions(ItemStack itemStack) {
+            if (actions == null && spawnActions == null) {
+                return;
+            }
+            ItemMeta itemMeta = Objects.requireNonNull(itemStack.getItemMeta());
+            if (actions != null) {
+                itemMeta.getPersistentDataContainer().set(
+                        NamespacedKeys.ARCHEOLOGY_EXECUTE_ACTIONS_PICK.getNamespacedKey(),
+                        new StringArrayTagType(StandardCharsets.UTF_8), new String[] {actions});
+            }
+            if (spawnActions != null) {
+                itemMeta.getPersistentDataContainer().set(
+                        NamespacedKeys.ARCHEOLOGY_EXECUTE_ACTIONS_SPAWN.getNamespacedKey(),
+                        new StringArrayTagType(StandardCharsets.UTF_8), new String[] {spawnActions});
+            }
+            itemStack.setItemMeta(itemMeta);
         }
 
         public int getChance() {

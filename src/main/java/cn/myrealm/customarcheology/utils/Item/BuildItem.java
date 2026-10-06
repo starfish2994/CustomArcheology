@@ -314,9 +314,27 @@ public class BuildItem {
         }
 
         // Attribute
-        ConfigurationSection attributesKey = section.getConfigurationSection("attributes");
-        if (attributesKey != null) {
-            for (String attribute : attributesKey.getKeys(false)) {
+        List<Map<?, ?>> attributes = new ArrayList<>(section.getMapList("attributes"));
+        if (!section.isList("attributes")) {
+            // Backwards compatibility for the old attribute-type section format.
+            ConfigurationSection attributesKey = section.getConfigurationSection("attributes");
+            if (attributesKey != null) {
+                for (String attribute : attributesKey.getKeys(false)) {
+                    ConfigurationSection attributeSection = attributesKey.getConfigurationSection(attribute);
+                    if (attributeSection != null) {
+                        Map<String, Object> attributeData = new LinkedHashMap<>(attributeSection.getValues(false));
+                        attributeData.put("type", attribute);
+                        attributes.add(attributeData);
+                    }
+                }
+            }
+        }
+        for (Map<?, ?> attributeData : attributes) {
+            Object attributeType = attributeData.get("type");
+            if (attributeType == null) {
+                continue;
+            }
+            String attribute = attributeType.toString();
                 Attribute attributeInst;
                 if (CommonUtil.getMinorVersion(21, 2)) {
                     attributeInst = Registry.ATTRIBUTE.get(CommonUtil.parseNamespacedKey(attribute));
@@ -326,9 +344,9 @@ public class BuildItem {
                 if (attributeInst == null) {
                     continue;
                 }
-                ConfigurationSection subSection = attributesKey.getConfigurationSection(attribute);
-                if (subSection == null) {
-                    continue;
+                ConfigurationSection subSection = new org.bukkit.configuration.MemoryConfiguration();
+                for (Map.Entry<?, ?> attributeEntry : attributeData.entrySet()) {
+                    subSection.set(attributeEntry.getKey().toString(), attributeEntry.getValue());
                 }
                 String attribId = subSection.getString("id");
                 UUID id = attribId != null ? UUID.fromString(attribId) : UUID.randomUUID();
@@ -395,7 +413,6 @@ public class BuildItem {
                     }
                 }
             }
-        }
 
         // Damage
         if (meta instanceof Damageable) {
@@ -429,20 +446,42 @@ public class BuildItem {
         // Banner
         if (meta instanceof BannerMeta) {
             BannerMeta banner = (BannerMeta) meta;
-            ConfigurationSection bannerPatternsKey = section.getConfigurationSection("patterns");
-
-            if (bannerPatternsKey != null) {
-                for (String pattern : bannerPatternsKey.getKeys(false)) {
-                    PatternType type = null;
+            List<String> bannerPatterns = section.getStringList("patterns");
+            if (section.isList("patterns")) {
+                for (String bannerPattern : bannerPatterns) {
+                    int separatorIndex = bannerPattern.lastIndexOf(':');
+                    if (separatorIndex <= 0 || separatorIndex == bannerPattern.length() - 1) {
+                        continue;
+                    }
+                    String pattern = bannerPattern.substring(0, separatorIndex).trim();
+                    String bannerColor = bannerPattern.substring(separatorIndex + 1).trim();
+                    PatternType type;
                     if (CommonUtil.getMajorVersion(21)) {
                         type = Registry.BANNER_PATTERN.get(CommonUtil.parseNamespacedKey(pattern));
                     } else {
                         type = Enums.getIfPresent(PatternType.class, pattern.toUpperCase()).or(PatternType.BASE);
                     }
-                    String bannerColor = bannerPatternsKey.getString(pattern);
-                    if (type != null && bannerColor != null) {
+                    if (type != null) {
                         DyeColor color = Enums.getIfPresent(DyeColor.class, bannerColor.toUpperCase()).or(DyeColor.WHITE);
                         banner.addPattern(new Pattern(color, type));
+                    }
+                }
+            } else {
+                // Backwards compatibility for the old "PATTERN: COLOR" map format.
+                ConfigurationSection bannerPatternsKey = section.getConfigurationSection("patterns");
+                if (bannerPatternsKey != null) {
+                    for (String pattern : bannerPatternsKey.getKeys(false)) {
+                        PatternType type;
+                        if (CommonUtil.getMajorVersion(21)) {
+                            type = Registry.BANNER_PATTERN.get(CommonUtil.parseNamespacedKey(pattern));
+                        } else {
+                            type = Enums.getIfPresent(PatternType.class, pattern.toUpperCase()).or(PatternType.BASE);
+                        }
+                        String bannerColor = bannerPatternsKey.getString(pattern);
+                        if (type != null && bannerColor != null) {
+                            DyeColor color = Enums.getIfPresent(DyeColor.class, bannerColor.toUpperCase()).or(DyeColor.WHITE);
+                            banner.addPattern(new Pattern(color, type));
+                        }
                     }
                 }
             }

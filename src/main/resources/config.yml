@@ -49,3 +49,10 @@ settings:
   block-scale: 0.25
   hook:
     betterstructures: true
+archeology:
+  # legacy: barrier + display entity; craftengine: registered CE block behavior.
+  # Changing this setting requires a server restart. Existing blocks keep their saved mode.
+  mode: legacy
+  craftengine:
+    # Generate CE definitions and copy block textures on startup.
+    auto-install: true

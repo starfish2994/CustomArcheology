@@ -1,12 +1,15 @@
 package cn.myrealm.customarcheology.managers.managers;
 
+import cn.myrealm.customarcheology.hooks.craftengine.CraftEngineSupport;
+import cn.myrealm.customarcheology.mechanics.cores.BlockMode;
+
 import cn.myrealm.customarcheology.CustomArcheology;
 import cn.myrealm.customarcheology.enums.Messages;
 import cn.myrealm.customarcheology.enums.SQLs;
 import cn.myrealm.customarcheology.managers.BaseManager;
 import cn.myrealm.customarcheology.managers.managers.system.DatabaseManager;
 import cn.myrealm.customarcheology.mechanics.cores.ArcheologyBlock;
-import cn.myrealm.customarcheology.mechanics.cores.FakeTileBlock;
+import cn.myrealm.customarcheology.mechanics.cores.ArcheologyInstance;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -96,6 +99,10 @@ public class BlockManager extends BaseManager {
         return Optional.ofNullable(worldBlocksMap.get(world.getUID()))
                 .map(blockIds -> blockIds.stream()
                         .map(blocksMap::get)
+                        .filter(Objects::nonNull)
+                        .filter(block -> CustomArcheology.plugin.getBlockMode() != BlockMode.CRAFTENGINE
+                                || CraftEngineSupport.validDefinition(block.getCraftEngineBlockId(), block)
+                                && CraftEngineSupport.validReplaceDefinition(block))
                         .collect(Collectors.toList()))
                 .orElse(new ArrayList<>());
     }
@@ -145,9 +152,9 @@ public class BlockManager extends BaseManager {
 
     public void updateBlocks() {
         ChunkManager chunkManager = ChunkManager.getInstance();
-        List<FakeTileBlock> fakeTileBlocks = chunkManager.getFakeTileBlocks();
-        for (FakeTileBlock fakeTileBlock : fakeTileBlocks) {
-            fakeTileBlock.placeBlock();
+        List<ArcheologyInstance> archeologyInstances = chunkManager.getInstances();
+        for (ArcheologyInstance archeologyInstance : archeologyInstances) {
+            archeologyInstance.placeBlock();
         }
     }
 

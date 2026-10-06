@@ -1,10 +1,12 @@
 package cn.myrealm.customarcheology.managers.managers;
 
 
+import cn.myrealm.customarcheology.CustomArcheology;
+import cn.myrealm.customarcheology.hooks.craftengine.CraftEngineSupport;
 import cn.myrealm.customarcheology.managers.BaseManager;
 import cn.myrealm.customarcheology.mechanics.cores.ArcheologyBlock;
 import cn.myrealm.customarcheology.mechanics.ArcheologyChunkSpawner;
-import cn.myrealm.customarcheology.mechanics.cores.FakeTileBlock;
+import cn.myrealm.customarcheology.mechanics.cores.ArcheologyInstance;
 import cn.myrealm.customarcheology.mechanics.cores.PersistentDataChunk;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -172,6 +174,14 @@ public class ChunkManager extends BaseManager {
         }
     }
 
+    public void reloadLoadedChunks() {
+        List<Chunk> chunks = new ArrayList<>(loadedChunks.keySet());
+        for (Chunk chunk : chunks) {
+            unloadChunk(chunk);
+            loadChunk(chunk, true);
+        }
+    }
+
     public boolean chunkUnloaded(Chunk chunk) {
         return !loadedChunks.containsKey(chunk);
     }
@@ -318,23 +328,22 @@ public class ChunkManager extends BaseManager {
     }
 
     public boolean isArcheologyBlock(Location location) {
-        PersistentDataChunk dataChunk = getPersistentDataChunk(location);
-        return dataChunk.isArcheologyBlock(location);
+        ArcheologyInstance block = getInstanceAt(location);
+        return block != null && block.isActive();
     }
 
     public ArcheologyBlock getArcheologyBlock(Location location) {
-        PersistentDataChunk dataChunk = getPersistentDataChunk(location);
-        return dataChunk.getArcheologyBlock(location);
+        ArcheologyInstance block = getInstanceAt(location);
+        return block != null && block.isActive() ? block.getArcheologyBlock() : null;
     }
 
     public boolean isManagedBlock(Location location) {
-        PersistentDataChunk dataChunk = getPersistentDataChunk(location);
-        return dataChunk.isManagedBlock(location);
+        return getInstanceAt(location) != null || getPersistentDataChunk(location).isManagedBlock(location);
     }
 
     public boolean isRespawningBlock(Location location) {
-        PersistentDataChunk dataChunk = getPersistentDataChunk(location);
-        return dataChunk.isRespawningBlock(location);
+        ArcheologyInstance block = getInstanceAt(location);
+        return block != null && block.isCoolingDown();
     }
 
     public PersistentDataChunk getPersistentDataChunk(Location location) {
@@ -347,20 +356,23 @@ public class ChunkManager extends BaseManager {
     }
 
 
-    public List<FakeTileBlock> getFakeTileBlocks() {
-        List<FakeTileBlock> fakeTileBlocks = new ArrayList<>();
+    public List<ArcheologyInstance> getInstances() {
+        List<ArcheologyInstance> archeologyInstances = new ArrayList<>();
         for (PersistentDataChunk dataChunk : loadedChunks.values()) {
-            fakeTileBlocks.addAll(dataChunk.getFakeTileBlocks());
+            archeologyInstances.addAll(dataChunk.getInstances());
         }
-        return fakeTileBlocks;
+        return archeologyInstances;
     }
 
-    public FakeTileBlock getFakeTileBlock(Location location) {
-        Chunk chunk = location.getChunk();
-        if (chunkUnloaded(chunk)) {
-            loadChunk(chunk);
+    public ArcheologyInstance getInstanceAt(Location location) {
+        location = location.getBlock().getLocation();
+        PersistentDataChunk dataChunk = getPersistentDataChunk(location);
+        dataChunk.getInstances();
+        ArcheologyInstance block = dataChunk.getInstanceAt(location);
+        if (block == null && CustomArcheology.plugin.isCraftEngineAvailable()) {
+            block = CraftEngineSupport.attach(location);
         }
-        return loadedChunks.get(chunk).getFakeTileBlock(location);
+        return block;
     }
 
     private void releaseChunk(Chunk chunk) {

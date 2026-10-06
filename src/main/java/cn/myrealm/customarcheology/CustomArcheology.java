@@ -4,14 +4,17 @@ import cn.myrealm.customarcheology.commands.MainCommand;
 import cn.myrealm.customarcheology.commands.subcommands.*;
 import cn.myrealm.customarcheology.enums.Config;
 import cn.myrealm.customarcheology.enums.Messages;
-import cn.myrealm.customarcheology.listeners.bukkit.*;
 import cn.myrealm.customarcheology.hooks.BetterStructuresHook;
+import cn.myrealm.customarcheology.hooks.craftengine.CraftEngineResourceInstaller;
+import cn.myrealm.customarcheology.hooks.craftengine.CraftEngineSupport;
+import cn.myrealm.customarcheology.listeners.bukkit.*;
 import cn.myrealm.customarcheology.listeners.protocol.DigListener;
 import cn.myrealm.customarcheology.managers.BaseManager;
 import cn.myrealm.customarcheology.managers.managers.*;
 import cn.myrealm.customarcheology.managers.managers.system.DatabaseManager;
 import cn.myrealm.customarcheology.managers.managers.system.LanguageManager;
 import cn.myrealm.customarcheology.managers.managers.system.TextureManager;
+import cn.myrealm.customarcheology.mechanics.cores.BlockMode;
 import cn.myrealm.customarcheology.utils.CommonUtil;
 import com.github.retrooper.packetevents.PacketEvents;
 import org.bukkit.Bukkit;
@@ -30,6 +33,31 @@ import java.util.Random;
  * @author rzt1020
  */
 public final class CustomArcheology extends JavaPlugin {
+
+    private BlockMode blockMode;
+
+    private boolean craftEngineAvailable;
+
+    public BlockMode getBlockMode() {
+        return blockMode;
+    }
+
+    public boolean isCraftEngineAvailable() {
+        return craftEngineAvailable;
+    }
+
+    @Override
+    public void onLoad() {
+        plugin = this;
+        if (Bukkit.getPluginManager().getPlugin("CraftEngine") != null) {
+            try {
+                CraftEngineSupport.register();
+                craftEngineAvailable = true;
+            } catch (LinkageError | RuntimeException exception) {
+                getLogger().severe("Could not register CraftEngine behavior (requires CE 26.8.2): " + exception);
+            }
+        }
+    }
 
     public static CustomArcheology plugin;
 
@@ -58,10 +86,31 @@ public final class CustomArcheology extends JavaPlugin {
             Bukkit.getConsoleSender().sendMessage("§x§9§8§F§B§9§8[CustomArcheology] §cError: Can not get your Minecraft version! Default set to 1.0.0.");
         }
         outputDefaultFiles();
+        reloadConfig();
+
+        try {
+            blockMode = BlockMode.parse(getConfig().getString("archeology.mode", "legacy"));
+            if (blockMode == BlockMode.CRAFTENGINE
+                    && (!craftEngineAvailable || !Bukkit.getPluginManager().isPluginEnabled("CraftEngine"))) {
+                throw new IllegalStateException("CraftEngine mode requires CraftEngine 26.8.2 with successful behavior registration");
+            }
+            if (blockMode == BlockMode.CRAFTENGINE
+                    && getConfig().getBoolean("archeology.craftengine.auto-install", true)) {
+                int installed = new CraftEngineResourceInstaller(this).install();
+                getLogger().info("Installed " + installed + " block definitions into CraftEngine resources.");
+            }
+        } catch (RuntimeException | java.io.IOException exception) {
+            getLogger().severe(exception.getMessage());
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
 
         initPlugin();
         registerDefaultListeners();
         registerDefaultCommands();
+        if (craftEngineAvailable) {
+            CraftEngineSupport.enable();
+        }
 
         if (LocateManager.enableThis()) {
             managers.add(new LocateManager(this));
@@ -81,6 +130,10 @@ public final class CustomArcheology extends JavaPlugin {
     }
 
     public void reloadPlugin() {
+        reloadConfig();
+        if (BlockMode.parse(getConfig().getString("archeology.mode", "legacy")) != blockMode) {
+            throw new IllegalStateException("Changing archeology.mode requires a server restart");
+        }
         disablePlugin();
         initPlugin();
     }
@@ -93,6 +146,7 @@ public final class CustomArcheology extends JavaPlugin {
         managers.add(new TextureManager(this));
         managers.add(new HookManager(this));
         managers.add(new PlayerManager(this));
+        managers.add(new ActionManager(this));
         managers.add(new LootManager(this));
         managers.add(new BlockManager(this));
         managers.add(new ChunkManager(this));
@@ -114,6 +168,7 @@ public final class CustomArcheology extends JavaPlugin {
         new PlaceListener(this).registerBukkitListener();
         new BreakListener(this).registerBukkitListener();
         new BrushListener(this).registerBukkitListener();
+        new BlockLifecycleListener(this).registerBukkitListener();
         new ItemListener(this).registerBukkitListener();
         // Hook Listener
         if (CommonUtil.checkPluginLoad("BetterStructures") && Config.HOOK_BETTERSTRUCTURES.asBoolean()) {

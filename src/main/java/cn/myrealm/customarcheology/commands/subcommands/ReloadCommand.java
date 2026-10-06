@@ -49,7 +49,12 @@ public class ReloadCommand implements SubCommand {
         if (args.length != NONE_ARGUMENT) {
             sender.sendMessage(Messages.ERROR_INCORRECT_COMMAND.getMessageWithPrefix());
         }
-        CustomArcheology.plugin.reloadPlugin();
+        try {
+            CustomArcheology.plugin.reloadPlugin();
+        } catch (IllegalArgumentException | IllegalStateException exception) {
+            sender.sendMessage("§c[CustomArcheology] " + exception.getMessage());
+            return;
+        }
         if (sender instanceof Player) {
             sender.sendMessage(Messages.RELOAD_SUCCESS.getMessageWithPrefix());
         }
